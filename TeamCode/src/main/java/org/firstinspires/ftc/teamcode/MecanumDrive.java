@@ -108,11 +108,6 @@ public class MecanumDrive extends LinearOpMode {
         backRightDrive.setDirection(DcMotor.Direction.REVERSE);
         //Fixed motor directions (21764 had reversed motor) - this would be changed back to normal this year's robot
 
-        //leftDriveB.setDirection(DcMotor.Direction.FORWARD);
-        //leftDriveF.setDirection(DcMotor.Direction.FORWARD);
-        //rightDriveB.setDirection(DcMotor.Direction.REVERSE);
-        //rightDriveF.setDirection(DcMotor.Direction.FORWARD);
-
         // Wait for the game to start (driver presses PLAY)
         telemetry.addData("Status", "Initialized");
         telemetry.update();
