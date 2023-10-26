@@ -49,6 +49,9 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 //@Disabled
 public class TestAutonomous extends LinearOpMode {
 
+    boolean isNear;
+    boolean parkLeft;
+
     private DcMotor leftDriveFront = null;
     private DcMotor rightDriveFront = null;
     private DcMotor leftDriveBack = null;
@@ -168,23 +171,39 @@ public class TestAutonomous extends LinearOpMode {
         rightDriveFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         //Step 1: detect the team prop
-
+        SpikeMark teamPropMark = detectTeamProp();
         //Step 2: drive to the team prop
-
+        driveToCorrectSpikeMark(teamPropMark);
         //Step 3: place purple pixel on same line as team prop
-
+        depositPurplePixel();
         //Step 4: return to original position
-
+        driveFromSpikeMark(teamPropMark);
         //Step 5: drive under truss closest to wall to get to backdrop
-
+        driveToBackdrop(isNear);
         //Step 6: place yellow pixel on correct Apriltag
-
-        //Step 7: drive to white pixel stacks going under truss
-
-        //Step 8: pick up two pixels
-
-        //Step 9: return to backdrop and place white pixels
-
-        //Step 10: drive off to side
+        depositYellowPixel(teamPropMark);
+        //Step 7: drive off to side
+        parkInBackstage(parkLeft);
     }
+
+    enum SpikeMark {RIGHT, LEFT, CENTER}
+    SpikeMark detectTeamProp(){
+        return SpikeMark.CENTER;
+    }
+    void driveToCorrectSpikeMark(SpikeMark teamPropMark){
+
+    }
+    void depositPurplePixel(){}
+
+    void driveFromSpikeMark(SpikeMark teamPropMark){
+
+    }
+
+    void driveToBackdrop(boolean isNear){}
+
+    void depositYellowPixel(SpikeMark teamPropMark){}
+
+    void parkInBackstage(boolean parkLeft){}
+
+
 }
