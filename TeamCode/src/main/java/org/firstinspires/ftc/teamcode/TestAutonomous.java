@@ -51,16 +51,16 @@ public class TestAutonomous extends LinearOpMode {
 
     boolean isNear;
     boolean parkLeft;
-
+    Intake intake = new Intake();
     private DcMotor leftDriveFront = null;
     private DcMotor rightDriveFront = null;
     private DcMotor leftDriveBack = null;
     private DcMotor rightDriveBack = null;
 
-    private int     leftTargetF    = 0;
-    private int     leftTargetB    = 0;
-    private int     rightTargetF   = 0;
-    private int     rightTargetB   = 0;
+    private int leftTargetF = 0;
+    private int leftTargetB = 0;
+    private int rightTargetF = 0;
+    private int rightTargetB = 0;
 
     int moveCounts = 0;
 
@@ -68,7 +68,7 @@ public class TestAutonomous extends LinearOpMode {
     static final double TURN_SPEED = 0.5;
     // These values are from the sample code, we can change them later
 
-//    void turn(String dir, int time) {
+    //    void turn(String dir, int time) {
 //    //Make turning rely on absolute cardinal direction instead of turn time (later)
 //        if (dir == "l") {
 //            for (int i = 0; i < time; i++) {
@@ -96,12 +96,12 @@ public class TestAutonomous extends LinearOpMode {
     double wheelDiaIN = wheelDiaMM / MMperIN; //or input just inches as constant
     double wheelCircum = wheelDiaIN * 3.14; //Pi(); import math lib later
     int ultPlanHexEncoderTicks = 28; //ticks per motor rotation
-    double threeToOne = 84/29; // real 3:1
-    double fourToOne = 76/21; // real 4:1
+    double threeToOne = 84 / 29; // real 3:1
+    double fourToOne = 76 / 21; // real 4:1
     double drivetrainMotorGearRatio = threeToOne * fourToOne; //get gear ratio
 
     public double inchesPerTick() {
-        return (wheelCircum/(drivetrainMotorGearRatio * ultPlanHexEncoderTicks)); //Inches per tick
+        return (wheelCircum / (drivetrainMotorGearRatio * ultPlanHexEncoderTicks)); //Inches per tick
         //return ((drivetrainMotorGearRatio * ultPlanHexEncoderTicks)/wheelCircum) * inches; //Ticks per inch
     }
 
@@ -143,6 +143,7 @@ public class TestAutonomous extends LinearOpMode {
         setStraightTarget(moveCounts); //pass ticks for distance to move through target function
         driveToTarget(); //drive motors to encoder target
     }
+
     public void runOpMode() {
         while (opModeInInit()) {
             telemetry.addLine("waiting...");
@@ -175,7 +176,7 @@ public class TestAutonomous extends LinearOpMode {
         //Step 2: drive to the team prop
         driveToCorrectSpikeMark(teamPropMark);
         //Step 3: place purple pixel on same line as team prop
-        depositPurplePixel();
+        ejectPurplePixel();
         //Step 4: return to original position
         driveFromSpikeMark(teamPropMark);
         //Step 5: drive under truss closest to wall to get to backdrop
@@ -186,24 +187,64 @@ public class TestAutonomous extends LinearOpMode {
         parkInBackstage(parkLeft);
     }
 
+    void driveForwardInches(double amount) {
+    }
+    void turnDegrees(double amount) {
+    }
     enum SpikeMark {RIGHT, LEFT, CENTER}
-    SpikeMark detectTeamProp(){
+
+    SpikeMark detectTeamProp() {
         return SpikeMark.CENTER;
-    }
-    void driveToCorrectSpikeMark(SpikeMark teamPropMark){
-
-    }
-    void depositPurplePixel(){}
-
-    void driveFromSpikeMark(SpikeMark teamPropMark){
-
+        //
     }
 
-    void driveToBackdrop(boolean isNear){}
+    final double SPIKE_MARK_DECISION_DISTANCE = -1;
+    final double CENTER_SPIKE_MARK_INCHES = -1;
+    final double OFFCENTER_SPIKE_MARK_INCHES = -1;
+    final double OFFCENTER_DECISION_TURN_DEGREES = -1;
 
-    void depositYellowPixel(SpikeMark teamPropMark){}
+    void driveToCorrectSpikeMark(SpikeMark teamPropMark) {
+        driveForwardInches(SPIKE_MARK_DECISION_DISTANCE);
 
-    void parkInBackstage(boolean parkLeft){}
+        if (teamPropMark == SpikeMark.CENTER) {
+            driveForwardInches(CENTER_SPIKE_MARK_INCHES);
+        } else if (teamPropMark == SpikeMark.LEFT) {
+            turnDegrees(OFFCENTER_DECISION_TURN_DEGREES);
+            driveForwardInches(OFFCENTER_SPIKE_MARK_INCHES);
+        }
+        else if (teamPropMark == SpikeMark.RIGHT) {
+            turnDegrees(-OFFCENTER_DECISION_TURN_DEGREES);
+            driveForwardInches(OFFCENTER_SPIKE_MARK_INCHES);
+        }
+    }
+
+    void ejectPurplePixel() {
+        intake.ejectPixel();
+    }
+
+    void driveFromSpikeMark(SpikeMark teamPropMark) {
+        driveForwardInches(-SPIKE_MARK_DECISION_DISTANCE);
+
+        if (teamPropMark == SpikeMark.CENTER) {
+            driveForwardInches(-CENTER_SPIKE_MARK_INCHES);
+        } else if (teamPropMark == SpikeMark.LEFT) {
+            turnDegrees(-OFFCENTER_DECISION_TURN_DEGREES);
+            driveForwardInches(-OFFCENTER_SPIKE_MARK_INCHES);
+        }
+        else if (teamPropMark == SpikeMark.RIGHT) {
+            turnDegrees(OFFCENTER_DECISION_TURN_DEGREES);
+            driveForwardInches(-OFFCENTER_SPIKE_MARK_INCHES);
+        }
+    }
+
+    void driveToBackdrop(boolean isNear) {
+    }
+
+    void depositYellowPixel(SpikeMark teamPropMark) {
+    }
+
+    void parkInBackstage(boolean parkLeft) {
+    }
 
 
 }
