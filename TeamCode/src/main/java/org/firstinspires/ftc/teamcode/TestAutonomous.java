@@ -167,10 +167,10 @@ public class TestAutonomous extends LinearOpMode {
         move(1, 48);
         telemetry.addData("Path", "Complete");
         telemetry.update();
-        leftDriveFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightDriveFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        leftDriveFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        leftDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        rightDriveFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        rightDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         //Step 1: detect the team prop
         SpikeMark teamPropMark = detectTeamProp();
         //Step 2: drive to the team prop
