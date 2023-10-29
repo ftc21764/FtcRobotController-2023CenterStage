@@ -651,17 +651,17 @@ public class PowerPlayAutonomous extends LinearOpMode {
     //Step 1: detect the team prop
     TestAutonomous.SpikeMark teamPropMark = detectTeamProp();
     //Step 2: drive to the team prop
-    driveToCorrectSpikeMark(teamPropMark);
+    //driveToCorrectSpikeMark(teamPropMark);
     //Step 3: place purple pixel on same line as team prop
-    ejectPurplePixel();
+    //ejectPurplePixel();
     //Step 4: return to original position
-    driveFromSpikeMark(teamPropMark);
+    //driveFromSpikeMark(teamPropMark);
     //Step 5: drive under truss closest to wall to get to backdrop
-    driveToBackdrop(isNear);
+    //driveToBackdrop(isNear);
     //Step 6: place yellow pixel on correct Apriltag
-    depositYellowPixel(teamPropMark);
+    //depositYellowPixel(teamPropMark);
     //Step 7: drive off to side
-    parkInBackstage(parkLeft);
+    //parkInBackstage(parkLeft);
 
     void driveForwardInches(double amount) {
     }
@@ -726,7 +726,6 @@ public class PowerPlayAutonomous extends LinearOpMode {
 }
 
 
-}
 
 
 
