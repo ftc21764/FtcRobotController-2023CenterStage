@@ -32,10 +32,8 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -93,9 +91,9 @@ import java.util.List;
  *  Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@Autonomous(name="Power Play Autonomous 21764", group="Robot")
-@Disabled
-public class PowerPlayAutonomous extends LinearOpMode {
+@Autonomous(name="CenterStage Autonomous 21764", group="Robot")
+//@Disabled
+public class CenterStageAutonomous extends LinearOpMode {
 
     /* Declare OpMode members. */
     protected DcMotor         leftDriveF   = null;
@@ -103,10 +101,10 @@ public class PowerPlayAutonomous extends LinearOpMode {
     protected DcMotor         rightDriveF  = null;
     protected DcMotor         rightDriveB  = null;
     protected BNO055IMU       imu          = null;      // Control/Expansion Hub IMU
-    protected SignalSleeveRecognizer    recognizer = null;
-    protected LinearSlide         linearSlide = null;
+    //protected SignalSleeveRecognizer    recognizer = null;
+    //protected LinearSlide         linearSlide = null;
     protected Intake        intake = null;
-    protected SwingArm      swingArm = null;
+    //protected SwingArm      swingArm = null;
     protected ElapsedTime runtime = new ElapsedTime();
 
     private double          robotHeading  = 0;
@@ -124,6 +122,11 @@ public class PowerPlayAutonomous extends LinearOpMode {
     private int     leftTargetB    = 0;
     private int     rightTargetF   = 0;
     private int     rightTargetB   = 0;
+
+    boolean mirrored;
+    boolean notMirrored = false;
+
+    String allianceColor = "blue";
 
     // Calculate the COUNTS_PER_INCH for your specific drive train.
     // Go to your motor vendor website to determine your motor's COUNTS_PER_MOTOR_REV
@@ -153,7 +156,6 @@ public class PowerPlayAutonomous extends LinearOpMode {
     //stuff that makes the left and right side autonomous (hopefully) work! :D
     // If your robot starts on the right side in the driver's view, (A2 or F5), set to 1
     // If your robot starts on the left side in the driver's view, (A5 or F2), set to -1
-    protected int     reverseTurnsForLeftSide            = 1;
 
     protected boolean isAutonomous = true;
 
@@ -166,10 +168,10 @@ public class PowerPlayAutonomous extends LinearOpMode {
         leftDriveF  = hardwareMap.get(DcMotor.class, "left_driveF");
         rightDriveB = hardwareMap.get(DcMotor.class, "right_driveB");
         rightDriveF = hardwareMap.get(DcMotor.class, "right_driveF");
-        recognizer = new SignalSleeveRecognizer(hardwareMap, telemetry);
-        linearSlide = new LinearSlide(hardwareMap, telemetry, gamepad2);
-        intake = new Intake(hardwareMap, telemetry, gamepad1);
-        swingArm = new SwingArm(hardwareMap, telemetry, gamepad2, isAutonomous);
+        //recognizer = new SignalSleeveRecognizer(hardwareMap, telemetry);
+        //linearSlide = new LinearSlide(hardwareMap, telemetry, gamepad2);
+        //intake = new Intake(hardwareMap, telemetry, gamepad1);
+        //swingArm = new SwingArm(hardwareMap, telemetry, gamepad2, isAutonomous);
 
         boolean isNear;
         boolean parkLeft;
@@ -223,9 +225,9 @@ public class PowerPlayAutonomous extends LinearOpMode {
      */
 
     protected void mechanismLoop() {
-        linearSlide.loop();
-        intake.loop();
-        swingArm.loop();
+        //linearSlide.loop();
+        //intake.loop();
+        //swingArm.loop();
     }
 
     @Override
@@ -234,7 +236,7 @@ public class PowerPlayAutonomous extends LinearOpMode {
         // Wait for the game to start (Display Gyro value while waiting)
         while (opModeInInit()) {
             telemetry.addData(">", "Robot Heading = %4.0f", getRawHeading());
-            recognizer.scan();
+            //recognizer.scan();
             telemetry.update();
         }
 
@@ -245,7 +247,7 @@ public class PowerPlayAutonomous extends LinearOpMode {
         rightDriveB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         resetHeading();
 
-        runAutonomousProgram();
+        runAutonomousProgram("red");
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
@@ -255,57 +257,32 @@ public class PowerPlayAutonomous extends LinearOpMode {
 
 
     //OBSOLETE DO NOT USE THE THING BELOW THIS LINE!!!!
-    public void runAutonomousProgram() {
-        // Step through each leg of the path,
-        // Notes:   Reverse movement is obtained by setting a negative distance (not speed)
-        //          holdHeading() is used after turns to let the heading stabilize
-        //          Add a sleep(2000) after any step to keep the telemetry data visible for review
+    public void runAutonomousProgram(String allianceColor) {
 
+        if (allianceColor == "red") {
+            mirrored = true;
+        } else {
+            mirrored = false;
+        }
+        turnToHeading(TURN_SPEED, 90.0, notMirrored);
+        turnToHeading(TURN_SPEED, 0.0, notMirrored);
+        turnToHeading(TURN_SPEED, -90.0, mirrored);
+        turnToHeading(TURN_SPEED, 10.0, notMirrored);
 
-        //BASE DRIVE PATH:
-        //turn arodund
-        // TODO: testing observed that the first driveStraight call doesn't work on the first run, only after a second run would this first call work.
-        // TODO: adding this holdHeading call in the hope that it 'wakes up' the robot and the driveStraight command runs on first run.
-        // holdHeading(TURN_SPEED,0,1);
-        //driveStraight(0.3, 6.0, 0);
-        //turnToHeading(TURN_SPEED, 180);  // TODO: suggest not running turning around. There was a small amount of variance in the direction the robot would travel after turn 180 hich resulted in dropping the cone in slightly different locations sometimes missing the juntion
-
-        // drive to medium junction
-        driveStraight(0.3, -48.0, 180.0);
-        turnToHeading(TURN_SPEED, 135.0);
-        intake.pickUpCone();
-
-        // begin setup to drop on medium junction
-        moveToMediumPosition();
-        holdHeading(TURN_SPEED, 135,2);
-       /* driveStraight(0.3, 10.0, 135.0); // TODO: changed speed parameter from DRIVE_SPEED constant to a value to test slower speed in this call due to some variance during testing.
-
-        // drop cone on medium junction
-        intake.dropCone();
-
-        // sleeps for two seconds while the intake drops the cone. if possible, decrease holdTime.
-        holdHeading(TURN_SPEED, 45, 2);
-
-        //get to center of square
-        driveStraight(DRIVE_SPEED, -6, 135);
-        turnToHeading(TURN_SPEED, -90);
-
-        // move slide and four bar back to intake position
-        moveToIntakePosition();
 
         //check whether recognition label is null, if not, drive to parking space
-        if (recognizer.recognitionLabel == null) {
-            //stay in current place
-        } else if (recognizer.recognitionLabel.startsWith("1")) {
-            //Drive to parking 1
-            driveStraight(DRIVE_SPEED, -24.0, -90.0);
-        } else if (recognizer.recognitionLabel.startsWith("2")) {
-            //Stay in parking 2
-        } else {
-            //Drive to parking 3
-            driveStraight(DRIVE_SPEED, 24.0, -90.0);
-        }
-*/ //ENDS HERE
+//        if (recognizer.recognitionLabel == null) {
+//            //stay in current place
+//        } else if (recognizer.recognitionLabel.startsWith("1")) {
+//            //Drive to parking 1
+//            driveStraight(DRIVE_SPEED, -24.0, -90.0);
+//        } else if (recognizer.recognitionLabel.startsWith("2")) {
+//            //Stay in parking 2
+//        } else {
+//            //Drive to parking 3
+//            driveStraight(DRIVE_SPEED, 24.0, -90.0);
+//        }
+//*/ //ENDS HERE
 
 /* code from first competition!
         driveStraight(DRIVE_SPEED, 28.0, 0.0);
@@ -355,7 +332,7 @@ public class PowerPlayAutonomous extends LinearOpMode {
         if (opModeIsActive()) {
 
             //reverse the heading if you start on the left side. this turns a right heading into a left heading and vice versa.
-            heading = heading * reverseTurnsForLeftSide;
+            //heading = heading * reverseTurnsForAllianceColor;
 
             // Determine new target position, and pass to motor controller
             int moveCounts = (int)(distance * COUNTS_PER_INCH);
@@ -442,10 +419,12 @@ public class PowerPlayAutonomous extends LinearOpMode {
      *              0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
      *              If a relative angle is required, add/subtract from current heading.
      */
-    public void turnToHeading(double maxTurnSpeed, double heading) {
+    public void turnToHeading(double maxTurnSpeed, double heading, boolean isMirrored) {
 
         //reverse the heading if you start on the left side. this turns a right turn into a left turn and vice versa.
-        heading = heading * reverseTurnsForLeftSide;
+        if (isMirrored) {
+            heading *= -1;
+        }
 
         // Run getSteeringCorrection() once to pre-calculate the current error
         getSteeringCorrection(heading, P_DRIVE_GAIN);
@@ -485,12 +464,14 @@ public class PowerPlayAutonomous extends LinearOpMode {
      *                   If a relative angle is required, add/subtract from current heading.
      * @param holdTime   Length of time (in seconds) to hold the specified heading.
      */
-    public void holdHeading(double maxTurnSpeed, double heading, double holdTime) {
+    public void holdHeading(double maxTurnSpeed, double heading, double holdTime, boolean reverseSides) {
 
         ElapsedTime holdTimer = new ElapsedTime();
         holdTimer.reset();
 
-        heading = heading * reverseTurnsForLeftSide;
+        if (reverseSides) {
+            heading *= -1;
+        }
 
         // keep looping while we have time remaining.
         while (opModeIsActive() && (holdTimer.time() < holdTime)) {
@@ -624,28 +605,28 @@ public class PowerPlayAutonomous extends LinearOpMode {
     }
     // TODO: can we rename these moveTo* functions for setHeightTo*
     public void moveToGroundPosition() {
-        linearSlide.setPosition(0);
-        swingArm.setPosition(1);
+        //linearSlide.setPosition(0);
+        //swingArm.setPosition(1);
     }
 
     public void moveToLowPosition() {
-        linearSlide.setPosition(3);
-        swingArm.setPosition(1);
+        //linearSlide.setPosition(3);
+        //swingArm.setPosition(1);
     }
 
     public void moveToMediumPosition() {
-        linearSlide.setPosition(1);
-        swingArm.setPosition(2);
+        //linearSlide.setPosition(1);
+        //swingArm.setPosition(2);
     }
 
     public void moveToHighPosition() {
-        linearSlide.setPosition(3);
-        swingArm.setPosition(2);
+        //linearSlide.setPosition(3);
+        //swingArm.setPosition(2);
     }
 
     public void moveToIntakePosition() {
-        linearSlide.setPosition(2);
-        swingArm.setPosition(1);
+        //linearSlide.setPosition(2);
+        //swingArm.setPosition(1);
     }
 
     //Step 1: detect the team prop
