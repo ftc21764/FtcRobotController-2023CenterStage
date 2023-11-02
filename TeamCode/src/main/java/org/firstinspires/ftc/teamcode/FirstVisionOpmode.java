@@ -20,6 +20,7 @@ public class FirstVisionOpmode extends OpMode {
         visionProcessor = new FirstVisionProcessor();
         visionPortal = VisionPortal.easyCreateWithDefaults(
                 hardwareMap.get(WebcamName.class, "Webcam 1"), visionProcessor);
+        visionProcessor.getSelection();
     }
 
     @Override

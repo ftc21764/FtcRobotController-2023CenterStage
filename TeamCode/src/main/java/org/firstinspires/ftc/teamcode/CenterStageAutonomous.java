@@ -37,10 +37,12 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.vision.VisionPortal;
 
 import java.util.List;
 
@@ -128,6 +130,10 @@ public class CenterStageAutonomous extends LinearOpMode {
 
     String allianceColor = "blue";
 
+    private FirstVisionProcessor visionProcessor;
+
+    private VisionPortal visionPortal;
+
     // Calculate the COUNTS_PER_INCH for your specific drive train.
     // Go to your motor vendor website to determine your motor's COUNTS_PER_MOTOR_REV
     // For external drive gearing, set DRIVE_GEAR_REDUCTION as needed.
@@ -135,10 +141,24 @@ public class CenterStageAutonomous extends LinearOpMode {
     // This is gearing DOWN for less speed and more torque.
     // For gearing UP, use a gear ratio less than 1.0. Note this will affect the direction of wheel rotation.
     static final double     COUNTS_PER_MOTOR_REV    = 28.0 ;   // eg: GoBILDA 312 RPM Yellow Jacket
-    static final double     DRIVE_GEAR_REDUCTION    = 18.0 ;     // No External Gearing.
+    static final double     DRIVE_GEAR_REDUCTION    = 18.0 ;    // No External Gearing.
     static final double     WHEEL_DIAMETER_INCHES   = 3.0 ;     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
-            (WHEEL_DIAMETER_INCHES * 3.1415);
+            (WHEEL_DIAMETER_INCHES * Math.PI);
+
+    double MMperIN = 25.4;
+    int wheelDiaMM = 75;
+    double wheelDiaIN = wheelDiaMM / MMperIN; //or input just inches as constant
+    double wheelCircum = wheelDiaIN * Math.PI; //get circum (aka inches per wheel rev)
+    int ultPlanHexEncoderTicks = 28; //ticks per motor rotation
+    double threeToOne = 84 / 29; // real 3:1
+    double fourToOne = 76 / 21; // real 4:1
+    double drivetrainMotorGearRatio = threeToOne * fourToOne; //get gear ratio
+
+    public double inchesPerTick() {
+        return (wheelCircum / (drivetrainMotorGearRatio * ultPlanHexEncoderTicks)); //Inches per tick
+        //return ((drivetrainMotorGearRatio * ultPlanHexEncoderTicks)/wheelCircum) * inches; //Ticks per inch
+    }
 
     // These constants define the desired driving/control characteristics
     // They can/should be tweaked to suit the specific robot drive train.
@@ -170,12 +190,11 @@ public class CenterStageAutonomous extends LinearOpMode {
         rightDriveF = hardwareMap.get(DcMotor.class, "right_driveF");
         //recognizer = new SignalSleeveRecognizer(hardwareMap, telemetry);
         //linearSlide = new LinearSlide(hardwareMap, telemetry, gamepad2);
-        //intake = new Intake(hardwareMap, telemetry, gamepad1);
+        intake = new Intake(hardwareMap, telemetry, gamepad2);
         //swingArm = new SwingArm(hardwareMap, telemetry, gamepad2, isAutonomous);
 
         boolean isNear;
         boolean parkLeft;
-        Intake intake = new Intake();
 
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
@@ -234,9 +253,12 @@ public class CenterStageAutonomous extends LinearOpMode {
     public void runOpMode() {
         setupRobot(BNO055IMU.AngleUnit.DEGREES);
         // Wait for the game to start (Display Gyro value while waiting)
+        visionProcessor = new FirstVisionProcessor();
+        visionPortal = VisionPortal.easyCreateWithDefaults(hardwareMap.get(WebcamName.class, "Webcam 1"), visionProcessor);
         while (opModeInInit()) {
             telemetry.addData(">", "Robot Heading = %4.0f", getRawHeading());
-            //recognizer.scan();
+            telemetry.addData("Identified", visionProcessor.getSelection());
+            visionProcessor.getSelection();
             telemetry.update();
         }
 
@@ -335,7 +357,7 @@ public class CenterStageAutonomous extends LinearOpMode {
             //heading = heading * reverseTurnsForAllianceColor;
 
             // Determine new target position, and pass to motor controller
-            int moveCounts = (int)(distance * COUNTS_PER_INCH);
+            int moveCounts = (int)(distance / inchesPerTick());
 
             leftTargetF = leftDriveF.getCurrentPosition() + moveCounts;
             leftTargetB = leftDriveB.getCurrentPosition() + moveCounts;
@@ -630,79 +652,79 @@ public class CenterStageAutonomous extends LinearOpMode {
     }
 
     //Step 1: detect the team prop
-    TestAutonomous.SpikeMark teamPropMark = detectTeamProp();
-    //Step 2: drive to the team prop
-    //driveToCorrectSpikeMark(teamPropMark);
-    //Step 3: place purple pixel on same line as team prop
-    //ejectPurplePixel();
-    //Step 4: return to original position
-    //driveFromSpikeMark(teamPropMark);
-    //Step 5: drive under truss closest to wall to get to backdrop
-    //driveToBackdrop(isNear);
-    //Step 6: place yellow pixel on correct Apriltag
-    //depositYellowPixel(teamPropMark);
-    //Step 7: drive off to side
-    //parkInBackstage(parkLeft);
-
-    void driveForwardInches(double amount) {
-    }
-    void turnDegrees(double amount) {
-    }
-    enum SpikeMark {RIGHT, LEFT, CENTER}
-
-    TestAutonomous.SpikeMark detectTeamProp() {
-        return TestAutonomous.SpikeMark.CENTER;
-        //
-    }
-
-    final double SPIKE_MARK_DECISION_DISTANCE = -1;
-    final double CENTER_SPIKE_MARK_INCHES = -1;
-    final double OFFCENTER_SPIKE_MARK_INCHES = -1;
-    final double OFFCENTER_DECISION_TURN_DEGREES = -1;
-
-    void driveToCorrectSpikeMark(TestAutonomous.SpikeMark teamPropMark) {
-        driveForwardInches(SPIKE_MARK_DECISION_DISTANCE);
-
-        if (teamPropMark == TestAutonomous.SpikeMark.CENTER) {
-            driveForwardInches(CENTER_SPIKE_MARK_INCHES);
-        } else if (teamPropMark == TestAutonomous.SpikeMark.LEFT) {
-            turnDegrees(OFFCENTER_DECISION_TURN_DEGREES);
-            driveForwardInches(OFFCENTER_SPIKE_MARK_INCHES);
-        }
-        else if (teamPropMark == TestAutonomous.SpikeMark.RIGHT) {
-            turnDegrees(-OFFCENTER_DECISION_TURN_DEGREES);
-            driveForwardInches(OFFCENTER_SPIKE_MARK_INCHES);
-        }
-    }
-
-    void ejectPurplePixel() {
-        intake.ejectPixel();
-    }
-
-    void driveFromSpikeMark(TestAutonomous.SpikeMark teamPropMark) {
-        driveForwardInches(-SPIKE_MARK_DECISION_DISTANCE);
-
-        if (teamPropMark == TestAutonomous.SpikeMark.CENTER) {
-            driveForwardInches(-CENTER_SPIKE_MARK_INCHES);
-        } else if (teamPropMark == TestAutonomous.SpikeMark.LEFT) {
-            turnDegrees(-OFFCENTER_DECISION_TURN_DEGREES);
-            driveForwardInches(-OFFCENTER_SPIKE_MARK_INCHES);
-        }
-        else if (teamPropMark == TestAutonomous.SpikeMark.RIGHT) {
-            turnDegrees(OFFCENTER_DECISION_TURN_DEGREES);
-            driveForwardInches(-OFFCENTER_SPIKE_MARK_INCHES);
-        }
-    }
-
-    void driveToBackdrop(boolean isNear) {
-    }
-
-    void depositYellowPixel(TestAutonomous.SpikeMark teamPropMark) {
-    }
-
-    void parkInBackstage(boolean parkLeft) {
-    }
-
+//    TestAutonomous.SpikeMark teamPropMark = detectTeamProp();
+//    //Step 2: drive to the team prop
+//    //driveToCorrectSpikeMark(teamPropMark);
+//    //Step 3: place purple pixel on same line as team prop
+//    //ejectPurplePixel();
+//    //Step 4: return to original position
+//    //driveFromSpikeMark(teamPropMark);
+//    //Step 5: drive under truss closest to wall to get to backdrop
+//    //driveToBackdrop(isNear);
+//    //Step 6: place yellow pixel on correct Apriltag
+//    //depositYellowPixel(teamPropMark);
+//    //Step 7: drive off to side
+//    //parkInBackstage(parkLeft);
+//
+//    void driveForwardInches(double amount) {
+//    }
+//    void turnDegrees(double amount) {
+//    }
+//    enum SpikeMark {RIGHT, LEFT, CENTER}
+//
+//    TestAutonomous.SpikeMark detectTeamProp() {
+//        return TestAutonomous.SpikeMark.CENTER;
+//        //
+//    }
+//
+//    final double SPIKE_MARK_DECISION_DISTANCE = -1;
+//    final double CENTER_SPIKE_MARK_INCHES = -1;
+//    final double OFFCENTER_SPIKE_MARK_INCHES = -1;
+//    final double OFFCENTER_DECISION_TURN_DEGREES = -1;
+//
+//    void driveToCorrectSpikeMark(TestAutonomous.SpikeMark teamPropMark) {
+//        driveForwardInches(SPIKE_MARK_DECISION_DISTANCE);
+//
+//        if (teamPropMark == TestAutonomous.SpikeMark.CENTER) {
+//            driveForwardInches(CENTER_SPIKE_MARK_INCHES);
+//        } else if (teamPropMark == TestAutonomous.SpikeMark.LEFT) {
+//            turnDegrees(OFFCENTER_DECISION_TURN_DEGREES);
+//            driveForwardInches(OFFCENTER_SPIKE_MARK_INCHES);
+//        }
+//        else if (teamPropMark == TestAutonomous.SpikeMark.RIGHT) {
+//            turnDegrees(-OFFCENTER_DECISION_TURN_DEGREES);
+//            driveForwardInches(OFFCENTER_SPIKE_MARK_INCHES);
+//        }
+//    }
+//
+//    void ejectPurplePixel() {
+//        intake.ejectPixel();
+//    }
+//
+//    void driveFromSpikeMark(TestAutonomous.SpikeMark teamPropMark) {
+//        driveForwardInches(-SPIKE_MARK_DECISION_DISTANCE);
+//
+//        if (teamPropMark == TestAutonomous.SpikeMark.CENTER) {
+//            driveForwardInches(-CENTER_SPIKE_MARK_INCHES);
+//        } else if (teamPropMark == TestAutonomous.SpikeMark.LEFT) {
+//            turnDegrees(-OFFCENTER_DECISION_TURN_DEGREES);
+//            driveForwardInches(-OFFCENTER_SPIKE_MARK_INCHES);
+//        }
+//        else if (teamPropMark == TestAutonomous.SpikeMark.RIGHT) {
+//            turnDegrees(OFFCENTER_DECISION_TURN_DEGREES);
+//            driveForwardInches(-OFFCENTER_SPIKE_MARK_INCHES);
+//        }
+//    }
+//
+//    void driveToBackdrop(boolean isNear) {
+//    }
+//
+//    void depositYellowPixel(TestAutonomous.SpikeMark teamPropMark) {
+//    }
+//
+//    void parkInBackstage(boolean parkLeft) {
+//    }
+//
 
 }
 
