@@ -29,15 +29,19 @@ public class SwingArm {
 
     //Max counts: 3150
 
-    static final int PICKUP_POINT_COUNT = 100;  // 10
-    static final int HIGH_POINT_COUNT = 3525; // 3350 110? Adjust to same distance from robot as low
+    static final int PICKUP_POINT_COUNT = 10;  // 10
+    static final int CARRY_POINT_COUNT = 600;
+    static final int DELIVERY_POINT_COUNT = 1845; // 3350 110? Adjust to same distance from robot as low
     //static final int TIMEOUT_SECONDS = 10;
     static final double UP_MAXIMUM_SPEED = 1.0;
     static final double DOWN_MAXIMUM_SPEED = 0.3;
     static final int ADJUSTMENT_COUNT = 30;
     private int targetPositionCount = PICKUP_POINT_COUNT;
-    boolean currentlyRunningToJunction = false;
+    boolean currentlyRunningToPosition = false;
     boolean isAutonomous;
+
+    static final int HIGH_HARDSTOP = DELIVERY_POINT_COUNT + 200;
+    static final int LOW_HARDSTOP = PICKUP_POINT_COUNT;
 
     public SwingArm(HardwareMap hardwareMap, Telemetry telemetry, Gamepad gamepad, boolean isAutonomous) {
         this.hardwareMap = hardwareMap;
@@ -77,7 +81,9 @@ public class SwingArm {
         if (position == 1) {
             targetPositionCount = PICKUP_POINT_COUNT;
         } else if (position == 2) {
-            targetPositionCount = HIGH_POINT_COUNT;
+            targetPositionCount = CARRY_POINT_COUNT;
+        } else if (position == 3) {
+            targetPositionCount = DELIVERY_POINT_COUNT;
         } else {
             return;
         }
@@ -86,7 +92,7 @@ public class SwingArm {
 
         //swingArmMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        currentlyRunningToJunction = true;
+        currentlyRunningToPosition = true;
 
         runtime.reset();
     }
@@ -120,21 +126,23 @@ public class SwingArm {
      * @param gamepad What gamepad will be used
      */
     private void readGamepad(Gamepad gamepad) {
-        if (gamepad.a || gamepad.x) {
+        if (gamepad.a) {
             setPosition(1);
-        } else if (gamepad.b || gamepad.y) {
+        } else if (gamepad.b || gamepad.x) {
             setPosition(2);
+        } else if (gamepad.y) {
+            setPosition(3);
         }
 
         telemetry.addData("Gamepad right stick/left stick:", "%f %f", gamepad.right_stick_y, gamepad.left_stick_y);
         if (gamepad.right_stick_y > 0.1 || gamepad.right_stick_y < -0.1 ) {
-            targetPositionCount = Range.clip((int)(targetPositionCount + ADJUSTMENT_COUNT*-gamepad.right_stick_y), PICKUP_POINT_COUNT, HIGH_POINT_COUNT);
+            targetPositionCount = Range.clip((int)(targetPositionCount + ADJUSTMENT_COUNT*-gamepad.right_stick_y), LOW_HARDSTOP, HIGH_HARDSTOP);
             //swingArmMotor.setTargetPosition(targetPositionCount);
             armMotor.setTargetPosition((int)targetPositionCount);
             telemetry.addData("Manual Branch", "Adjustment made");
-        } else if (!currentlyRunningToJunction) {
+        } else if (!currentlyRunningToPosition) {
             //This is so that if you let go of the joystick, it immediately stops the arm from moving. Not a bug!!!
-            targetPositionCount = Range.clip((int) armMotor.getCurrentPosition(), PICKUP_POINT_COUNT, HIGH_POINT_COUNT);
+            targetPositionCount = Range.clip((int) armMotor.getCurrentPosition(), LOW_HARDSTOP, HIGH_HARDSTOP);
             armMotor.setTargetPosition((int)targetPositionCount);
             telemetry.addData("Manual Branch", "Stop moving");
         } else {
@@ -152,11 +160,11 @@ public class SwingArm {
         setPower(currentPosition);
         telemetry.addData("Swing arm target position", targetPositionCount);
         telemetry.addData("SwingArmMotorPower", armMotor.getPower());
-        telemetry.addData("SwingArm Currently Running to Junction", currentlyRunningToJunction);
+        telemetry.addData("SwingArm Currently Running to Junction", currentlyRunningToPosition);
 
-        if (currentlyRunningToJunction) {
+        if (currentlyRunningToPosition) {
             if (!armMotor.isBusy()) {
-                currentlyRunningToJunction = false;
+                currentlyRunningToPosition = false;
             }
         }
 
