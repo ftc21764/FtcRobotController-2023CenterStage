@@ -31,9 +31,11 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -42,6 +44,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.vision.VisionPortal;
 
 import java.util.List;
@@ -102,7 +105,7 @@ public class CenterStageAutonomous extends LinearOpMode {
     protected DcMotor         leftDriveB   = null;
     protected DcMotor         rightDriveF  = null;
     protected DcMotor         rightDriveB  = null;
-    protected BNO055IMU       imu          = null;      // Control/Expansion Hub IMU
+    protected IMU             imu          = null;      // Control/Expansion Hub IMU
     //protected SignalSleeveRecognizer    recognizer = null;
     //protected LinearSlide         linearSlide = null;
     protected Intake        intake = null;
@@ -182,7 +185,7 @@ public class CenterStageAutonomous extends LinearOpMode {
     //this sets up for bulk reads!
     protected List<LynxModule> allHubs;
 
-    protected void setupRobot(BNO055IMU.AngleUnit imuUnits) {
+    protected void setupRobot() {
         // Initialize the drive system variables.
         leftDriveB  = hardwareMap.get(DcMotor.class, "left_driveB");
         leftDriveF  = hardwareMap.get(DcMotor.class, "left_driveF");
@@ -210,10 +213,13 @@ public class CenterStageAutonomous extends LinearOpMode {
         // That way the current orientation is not reset when the opmode starts.
 
         // define initialization values for IMU, and then initialize it.
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit            = imuUnits;
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-        imu.initialize(parameters);
+
+        imu = hardwareMap.get(IMU.class, "imu");
+        imu.initialize(new IMU.Parameters(
+                new RevHubOrientationOnRobot(
+                        RevHubOrientationOnRobot.LogoFacingDirection.FORWARD,
+                        RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
+                )));
 
         // Ensure the robot is stationary.  Reset the encoders and set the motors to BRAKE mode
         leftDriveF.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -251,12 +257,12 @@ public class CenterStageAutonomous extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        setupRobot(BNO055IMU.AngleUnit.DEGREES);
+        setupRobot();
         // Wait for the game to start (Display Gyro value while waiting)
         visionProcessor = new FirstVisionProcessor();
         visionPortal = VisionPortal.easyCreateWithDefaults(hardwareMap.get(WebcamName.class, "Webcam 1"), visionProcessor);
         while (opModeInInit()) {
-            telemetry.addData(">", "Robot Heading = %4.0f", getRawHeading());
+            telemetry.addData("", "Robot Heading = %4.0f", getRawHeading());
             telemetry.addData("Identified", visionProcessor.getSelection());
             visionProcessor.getSelection();
             telemetry.update();
@@ -613,8 +619,9 @@ public class CenterStageAutonomous extends LinearOpMode {
      * read the raw (un-offset Gyro heading) directly from the IMU
      */
     public double getRawHeading() {
-        Orientation angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        return angles.firstAngle;
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        double botHeading = orientation.getYaw(AngleUnit.DEGREES);
+        return botHeading;
     }
 
     /**

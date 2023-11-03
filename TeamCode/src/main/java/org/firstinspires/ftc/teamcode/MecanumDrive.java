@@ -29,11 +29,17 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.bosch.BHI260IMU;
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 /*
  * This file is heavily derived from the following samples; refer back to them for original source:
@@ -84,13 +90,17 @@ public class MecanumDrive extends LinearOpMode {
         DcMotor frontRightDrive = hardwareMap.get(DcMotor.class, "right_driveF");
         DcMotor frontLeftDrive = hardwareMap.get(DcMotor.class, "left_driveF");
         DcMotor backLeftDrive = hardwareMap.get(DcMotor.class, "left_driveB");
+        Intake intake = new Intake(hardwareMap,telemetry,gamepad1);
 
         // Initialize the IMU (Inertia Measurement Unit), used to detect the orientation of the robot
         // for Field-Oriented driving
-        BNO055IMU imu = hardwareMap.get(BNO055IMU.class, "imu");
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
-        imu.initialize(parameters);
+        IMU imu = hardwareMap.get(IMU.class, "imu");
+
+        imu.initialize(new IMU.Parameters(
+                new RevHubOrientationOnRobot(
+                        RevHubOrientationOnRobot.LogoFacingDirection.FORWARD,
+                        RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
+                )));
 
         // ########################################################################################
         // !!!            IMPORTANT Drive Information. Test your motor directions.            !!!!!
@@ -102,11 +112,23 @@ public class MecanumDrive extends LinearOpMode {
         // when you first test your robot, push the left joystick forward and observe the direction the wheels turn.
         // Reverse the direction (flip FORWARD <-> REVERSE ) of any wheel that runs backward
         // Keep testing until ALL the wheels move the robot forward when you push the left joystick forward.
-        frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
-        backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
-        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
-        backRightDrive.setDirection(DcMotor.Direction.REVERSE);
-        //Fixed motor directions (21764 had reversed motor) - this would be changed back to normal this year's robot
+
+        //21764:
+//        frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
+//        backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
+//        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
+//        backRightDrive.setDirection(DcMotor.Direction.REVERSE);
+
+//        11109:
+        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+        frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
+        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
+
+        frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Wait for the game to start (driver presses PLAY)
         telemetry.addData("Status", "Initialized");
@@ -119,6 +141,8 @@ public class MecanumDrive extends LinearOpMode {
         while (opModeIsActive()) {
             double max;
 
+            intake.loop();
+
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
 
             double y = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
@@ -127,7 +151,10 @@ public class MecanumDrive extends LinearOpMode {
 
             // Use the IMU to determine the orientation of the robot relative to its position when
             // initialized, and then calculate rotation
-            double botHeading = -imu.getAngularOrientation().firstAngle;
+            //imu.getRobotOrientation()
+            //double botHeading = -imu.getAngularOrientation().firstAngle;
+            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+            double botHeading = orientation.getYaw(AngleUnit.RADIANS);
             double rotX = x * Math.cos(botHeading) - y * Math.sin(botHeading);
             double rotY = x * Math.sin(botHeading) + y * Math.cos(botHeading);
 
@@ -165,10 +192,10 @@ public class MecanumDrive extends LinearOpMode {
             }
 
             // Send calculated power to wheels
-            frontLeftDrive.setPower(leftFrontPower);
-            frontRightDrive.setPower(rightFrontPower);
-            backLeftDrive.setPower(leftBackPower);
-            backRightDrive.setPower(rightBackPower);
+//            frontLeftDrive.setPower(leftFrontPower);
+//            frontRightDrive.setPower(rightFrontPower);
+//            backLeftDrive.setPower(leftBackPower);
+//            backRightDrive.setPower(rightBackPower);
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime);
