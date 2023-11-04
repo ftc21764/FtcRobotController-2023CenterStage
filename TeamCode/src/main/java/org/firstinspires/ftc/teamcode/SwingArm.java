@@ -29,10 +29,18 @@ public class SwingArm {
 
     //Max counts: 3150
 
-    static final int PICKUP_POINT_COUNT = 10;  // 10
-    static final int CARRY_POINT_COUNT = 600;
-    static final int DELIVERY_POINT_COUNT = 1845; // 3350 110? Adjust to same distance from robot as low
+
+//    21764:
+//    static final int PICKUP_POINT_COUNT = 10;  // 10
+//    static final int CARRY_POINT_COUNT = 600;
+//    static final int DELIVERY_POINT_COUNT = 1845; // 3350 110? Adjust to same distance from robot as low
     //static final int TIMEOUT_SECONDS = 10;
+
+//    11109
+    static final int PICKUP_POINT_COUNT = 10;  // 10
+    static final int CARRY_POINT_COUNT = 700;
+    static final int DELIVERY_POINT_COUNT = 2110;
+
     static final double UP_MAXIMUM_SPEED = 1.0;
     static final double DOWN_MAXIMUM_SPEED = 0.3;
     static final int ADJUSTMENT_COUNT = 30;

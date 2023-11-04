@@ -75,8 +75,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Basic: Omni Linear OpMode", group="Linear OpMode")
-public class MecanumDrive extends LinearOpMode {
+@TeleOp(name="CenterStage Tele-Op", group="Linear OpMode")
+public class CenterStageTeleOp extends LinearOpMode {
 
     private final ElapsedTime runtime = new ElapsedTime();
 
@@ -91,6 +91,8 @@ public class MecanumDrive extends LinearOpMode {
         DcMotor frontLeftDrive = hardwareMap.get(DcMotor.class, "left_driveF");
         DcMotor backLeftDrive = hardwareMap.get(DcMotor.class, "left_driveB");
         Intake intake = new Intake(hardwareMap,telemetry,gamepad1);
+
+        SwingArm swingArm = new SwingArm(hardwareMap, telemetry, gamepad2, false);
 
         // Initialize the IMU (Inertia Measurement Unit), used to detect the orientation of the robot
         // for Field-Oriented driving
@@ -114,16 +116,16 @@ public class MecanumDrive extends LinearOpMode {
         // Keep testing until ALL the wheels move the robot forward when you push the left joystick forward.
 
         //21764:
-//        frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
-//        backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
-//        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
-//        backRightDrive.setDirection(DcMotor.Direction.REVERSE);
+        frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
+        backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
+        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
+        backRightDrive.setDirection(DcMotor.Direction.REVERSE);
 
 //        11109:
-        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
-        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
+//        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+//        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+//        frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
+//        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
 
         frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -132,6 +134,7 @@ public class MecanumDrive extends LinearOpMode {
 
         // Wait for the game to start (driver presses PLAY)
         telemetry.addData("Status", "Initialized");
+        swingArm.initLoop();
         telemetry.update();
 
         waitForStart();
@@ -142,6 +145,7 @@ public class MecanumDrive extends LinearOpMode {
             double max;
 
             intake.loop();
+            swingArm.loop();
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
 
@@ -192,10 +196,10 @@ public class MecanumDrive extends LinearOpMode {
             }
 
             // Send calculated power to wheels
-//            frontLeftDrive.setPower(leftFrontPower);
-//            frontRightDrive.setPower(rightFrontPower);
-//            backLeftDrive.setPower(leftBackPower);
-//            backRightDrive.setPower(rightBackPower);
+            frontLeftDrive.setPower(leftFrontPower);
+            frontRightDrive.setPower(rightFrontPower);
+            backLeftDrive.setPower(leftBackPower);
+            backRightDrive.setPower(rightBackPower);
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime);

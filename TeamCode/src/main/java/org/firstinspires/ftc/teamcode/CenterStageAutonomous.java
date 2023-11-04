@@ -35,6 +35,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
@@ -128,8 +129,12 @@ public class CenterStageAutonomous extends LinearOpMode {
     private int     rightTargetF   = 0;
     private int     rightTargetB   = 0;
 
-    boolean mirrored;
+    boolean isMirrored = true;
     boolean notMirrored = false;
+    boolean isRed;
+
+    boolean isNear = false;
+    boolean isFar = true;
 
     String allianceColor = "blue";
 
@@ -167,7 +172,7 @@ public class CenterStageAutonomous extends LinearOpMode {
     // They can/should be tweaked to suit the specific robot drive train.
     static final double     DRIVE_SPEED             = 0.5;     // Max driving speed for better distance accuracy.
     static final double     TURN_SPEED              = 0.4;     // Max Turn speed to limit turn rate
-    static final double     HEADING_THRESHOLD       = 1.0 ;    // How close must the heading get to the target before moving to next step.
+    static final double     HEADING_THRESHOLD       = 4.0 ;    // How close must the heading get to the target before moving to next step.
     // Requiring more accuracy (a smaller number) will often make the turn take longer to get into the final position.
     // Define the Proportional control coefficient (or GAIN) for "heading control".
     // We define one value when Turning (larger errors), and the other is used when Driving straight (smaller errors).
@@ -203,10 +208,17 @@ public class CenterStageAutonomous extends LinearOpMode {
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // When run, this OpMode should start both motors driving forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
-        leftDriveB.setDirection(DcMotor.Direction.FORWARD);
-        leftDriveF.setDirection(DcMotor.Direction.FORWARD);
-        rightDriveB.setDirection(DcMotor.Direction.REVERSE);
-        rightDriveF.setDirection(DcMotor.Direction.FORWARD);
+//        21764:
+//        leftDriveB.setDirection(DcMotor.Direction.FORWARD);
+//        leftDriveF.setDirection(DcMotor.Direction.FORWARD);
+//        rightDriveB.setDirection(DcMotor.Direction.REVERSE);
+//        rightDriveF.setDirection(DcMotor.Direction.FORWARD);
+
+//        11109:
+        leftDriveB.setDirection(DcMotor.Direction.REVERSE);
+        leftDriveF.setDirection(DcMotor.Direction.REVERSE);
+        rightDriveB.setDirection(DcMotor.Direction.FORWARD);
+        rightDriveF.setDirection(DcMotor.Direction.REVERSE);
 
         // TODO: Figure out if it's better to use a static variable for imu
         // and then avoid re-initializing it if you're in teleop mode and it already exists.
@@ -275,7 +287,7 @@ public class CenterStageAutonomous extends LinearOpMode {
         rightDriveB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         resetHeading();
 
-        runAutonomousProgram("red");
+        runAutonomousProgram("blue", isNear);
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
@@ -284,51 +296,52 @@ public class CenterStageAutonomous extends LinearOpMode {
     }
 
 
-    //OBSOLETE DO NOT USE THE THING BELOW THIS LINE!!!!
-    public void runAutonomousProgram(String allianceColor) {
+    public void runAutonomousProgram(String allianceColor, boolean isFar) {
 
         if (allianceColor == "red") {
-            mirrored = true;
+            isRed = true;
         } else {
-            mirrored = false;
+            isRed = false;
         }
-        turnToHeading(TURN_SPEED, 90.0, notMirrored);
-        turnToHeading(TURN_SPEED, 0.0, notMirrored);
-        turnToHeading(TURN_SPEED, -90.0, mirrored);
-        turnToHeading(TURN_SPEED, 10.0, notMirrored);
 
+        //move up to spike marks
+        driveStraight(DRIVE_SPEED, 26.0, 0.0, notMirrored);
 
-        //check whether recognition label is null, if not, drive to parking space
-//        if (recognizer.recognitionLabel == null) {
-//            //stay in current place
-//        } else if (recognizer.recognitionLabel.startsWith("1")) {
-//            //Drive to parking 1
-//            driveStraight(DRIVE_SPEED, -24.0, -90.0);
-//        } else if (recognizer.recognitionLabel.startsWith("2")) {
-//            //Stay in parking 2
-//        } else {
-//            //Drive to parking 3
-//            driveStraight(DRIVE_SPEED, 24.0, -90.0);
-//        }
-//*/ //ENDS HERE
-
-/* code from first competition!
-        driveStraight(DRIVE_SPEED, 28.0, 0.0);
-        telemetry.addData("Recognized: ", recognizer.recognitionLabel);
-        telemetry.update();
-
-        if (recognizer.recognitionLabel == null) {
-        } else if (recognizer.recognitionLabel.startsWith("1")) {
-            turnToHeading(TURN_SPEED, 90.0);
-            driveStraight(DRIVE_SPEED, 24.0, 90.0);
-        } else if (recognizer.recognitionLabel.startsWith("2")) {
-        } else {
-            //Drive to parking 3
-            turnToHeading(TURN_SPEED, -90.0);
-            driveStraight(DRIVE_SPEED, 24, -90.0);
+        //push to corresponding spike mark
+        switch (visionProcessor.selection) {
+            case LEFT:
+                turnToHeading(TURN_SPEED, 50.0, notMirrored);
+                driveStraight(DRIVE_SPEED, 17.0, 50.0, notMirrored);
+                driveStraight(DRIVE_SPEED, -17.0, 50.0, notMirrored);
+                turnToHeading(TURN_SPEED, 0.0, notMirrored);
+                break;
+            case MIDDLE:
+                driveStraight(DRIVE_SPEED, 20, 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED, -20, 0.0, notMirrored);
+                break;
+            case RIGHT:
+                turnToHeading(TURN_SPEED, 50.0, notMirrored);
+                driveStraight(DRIVE_SPEED, 17.0, -50.0, notMirrored);
+                driveStraight(DRIVE_SPEED, -17.0, -50.0, notMirrored);
+                turnToHeading(TURN_SPEED, 0.0, notMirrored);
+                break;
+            case NONE:
+                driveStraight(DRIVE_SPEED, 20.0, 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED, -20, 0.0, notMirrored);
+                break;
         }
-        turnToHeading(TURN_SPEED, 0.0);
-*/
+
+        driveStraight(DRIVE_SPEED, -8.0, 0.0, notMirrored);
+        turnToHeading(TURN_SPEED, 90.0, isMirrored);
+
+        if (isFar) {
+            driveStraight(DRIVE_SPEED, 48.0, 90.0, isMirrored);
+        }
+        driveStraight(DRIVE_SPEED, 24.0, 90.0, isMirrored);
+
+        //april tags or alt parking
+
+        driveStraight(DRIVE_SPEED, 6.0, 90.0, isMirrored);
     }
 
     /*
@@ -354,10 +367,15 @@ public class CenterStageAutonomous extends LinearOpMode {
      */
     public void driveStraight(double maxDriveSpeed,
                               double distance,
-                              double heading) {
+                              double heading,
+                              boolean isMirrored) {
 
         // Ensure that the opmode is still active
         if (opModeIsActive()) {
+
+            if (isMirrored && isRed) {
+                heading *= -1;
+            }
 
             //reverse the heading if you start on the left side. this turns a right heading into a left heading and vice versa.
             //heading = heading * reverseTurnsForAllianceColor;
@@ -450,7 +468,7 @@ public class CenterStageAutonomous extends LinearOpMode {
     public void turnToHeading(double maxTurnSpeed, double heading, boolean isMirrored) {
 
         //reverse the heading if you start on the left side. this turns a right turn into a left turn and vice versa.
-        if (isMirrored) {
+        if (isMirrored && isRed) {
             heading *= -1;
         }
 
