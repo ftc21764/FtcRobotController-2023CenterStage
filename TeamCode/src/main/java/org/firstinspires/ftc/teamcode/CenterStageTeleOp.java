@@ -167,8 +167,8 @@ public class CenterStageTeleOp extends LinearOpMode {
             //double botHeading = -imu.getAngularOrientation().firstAngle;
             YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
             double botHeading = orientation.getYaw(AngleUnit.RADIANS);
-            double rotX = x * Math.cos(botHeading) - y * Math.sin(botHeading);
-            double rotY = x * Math.sin(botHeading) + y * Math.cos(botHeading);
+            double rotX = x * Math.cos(botHeading) + y * Math.sin(botHeading);
+            double rotY = -x * Math.sin(botHeading) + y * Math.cos(botHeading);
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
