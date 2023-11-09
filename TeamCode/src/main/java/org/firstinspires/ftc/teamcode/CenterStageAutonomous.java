@@ -133,7 +133,6 @@ public class CenterStageAutonomous extends LinearOpMode {
     boolean notMirrored = false;
     boolean isRed;
 
-    boolean isNear = false;
     boolean isFar = true;
 
     String allianceColor = "blue";
@@ -209,16 +208,16 @@ public class CenterStageAutonomous extends LinearOpMode {
         // When run, this OpMode should start both motors driving forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
 //        21764:
-//        leftDriveB.setDirection(DcMotor.Direction.FORWARD);
-//        leftDriveF.setDirection(DcMotor.Direction.FORWARD);
-//        rightDriveB.setDirection(DcMotor.Direction.REVERSE);
-//        rightDriveF.setDirection(DcMotor.Direction.FORWARD);
+        leftDriveB.setDirection(DcMotor.Direction.FORWARD);
+        leftDriveF.setDirection(DcMotor.Direction.FORWARD);
+        rightDriveB.setDirection(DcMotor.Direction.REVERSE);
+        rightDriveF.setDirection(DcMotor.Direction.FORWARD);
 
 //        11109:
-        leftDriveB.setDirection(DcMotor.Direction.REVERSE);
-        leftDriveF.setDirection(DcMotor.Direction.REVERSE);
-        rightDriveB.setDirection(DcMotor.Direction.FORWARD);
-        rightDriveF.setDirection(DcMotor.Direction.REVERSE);
+//        leftDriveB.setDirection(DcMotor.Direction.REVERSE);
+//        leftDriveF.setDirection(DcMotor.Direction.REVERSE);
+//        rightDriveB.setDirection(DcMotor.Direction.FORWARD);
+//        rightDriveF.setDirection(DcMotor.Direction.REVERSE);
 
         // TODO: Figure out if it's better to use a static variable for imu
         // and then avoid re-initializing it if you're in teleop mode and it already exists.
@@ -261,6 +260,7 @@ public class CenterStageAutonomous extends LinearOpMode {
      * Checks on linear slide, four bar, and intake inside driving loops so that they can update themselves
      */
 
+
     protected void mechanismLoop() {
         //linearSlide.loop();
         //intake.loop();
@@ -277,6 +277,18 @@ public class CenterStageAutonomous extends LinearOpMode {
             telemetry.addData("", "Robot Heading = %4.0f", getRawHeading());
             telemetry.addData("Identified", visionProcessor.getSelection());
             visionProcessor.getSelection();
+            if (gamepad1.left_trigger > 0) {
+                isFar = false;
+            } else if (gamepad1.right_trigger > 0) {
+                isFar = true;
+            }
+            if (gamepad1.x) {
+                isRed = false;
+            } else if (gamepad1.b) {
+                isRed = true;
+            }
+            telemetry.addData("isRed:", isRed);
+            telemetry.addData("isFar:", isFar);
             telemetry.update();
         }
 
@@ -287,7 +299,7 @@ public class CenterStageAutonomous extends LinearOpMode {
         rightDriveB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         resetHeading();
 
-        runAutonomousProgram("blue", isNear);
+        runAutonomousProgram(allianceColor, isFar);
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
@@ -297,7 +309,6 @@ public class CenterStageAutonomous extends LinearOpMode {
 
 
     public void runAutonomousProgram(String allianceColor, boolean isFar) {
-
         if (allianceColor == "red") {
             isRed = true;
         } else {
@@ -305,43 +316,44 @@ public class CenterStageAutonomous extends LinearOpMode {
         }
 
         //move up to spike marks
-        driveStraight(DRIVE_SPEED, 26.0, 0.0, notMirrored);
+        driveStraight(DRIVE_SPEED, -20.0, 0.0, notMirrored);
 
         //push to corresponding spike mark
         switch (visionProcessor.selection) {
             case LEFT:
-                turnToHeading(TURN_SPEED, 50.0, notMirrored);
-                driveStraight(DRIVE_SPEED, 17.0, 50.0, notMirrored);
-                driveStraight(DRIVE_SPEED, -17.0, 50.0, notMirrored);
+                turnToHeading(TURN_SPEED, -50.0, notMirrored);
+                driveStraight(DRIVE_SPEED, -25.0, -50.0, notMirrored);
+                driveStraight(DRIVE_SPEED, 31.0, -50.0, notMirrored);
                 turnToHeading(TURN_SPEED, 0.0, notMirrored);
                 break;
             case MIDDLE:
-                driveStraight(DRIVE_SPEED, 20, 0.0, notMirrored);
-                driveStraight(DRIVE_SPEED, -20, 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED, -29.0, 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED, 29.0, 0.0, notMirrored);
                 break;
             case RIGHT:
                 turnToHeading(TURN_SPEED, 50.0, notMirrored);
-                driveStraight(DRIVE_SPEED, 17.0, -50.0, notMirrored);
-                driveStraight(DRIVE_SPEED, -17.0, -50.0, notMirrored);
+                driveStraight(DRIVE_SPEED, -25.0, 50.0, notMirrored);
+                driveStraight(DRIVE_SPEED, 31.0, 50.0, notMirrored);
                 turnToHeading(TURN_SPEED, 0.0, notMirrored);
                 break;
             case NONE:
-                driveStraight(DRIVE_SPEED, 20.0, 0.0, notMirrored);
-                driveStraight(DRIVE_SPEED, -20, 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED, -29.0, 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED, 29.0, 0.0, notMirrored);
                 break;
         }
 
-        driveStraight(DRIVE_SPEED, -8.0, 0.0, notMirrored);
-        turnToHeading(TURN_SPEED, 90.0, isMirrored);
+        driveStraight(DRIVE_SPEED, 20.0, 0.0, notMirrored);
+        turnToHeading(TURN_SPEED, -90.0, isMirrored);
 
         if (isFar) {
-            driveStraight(DRIVE_SPEED, 48.0, 90.0, isMirrored);
+            driveStraight(DRIVE_SPEED, -84.0, -90.0, isMirrored);
         }
-        driveStraight(DRIVE_SPEED, 24.0, 90.0, isMirrored);
+        driveStraight(DRIVE_SPEED, -42.0, -90.0, isMirrored);
 
         //april tags or alt parking
 
-        driveStraight(DRIVE_SPEED, 6.0, 90.0, isMirrored);
+        driveStraight(DRIVE_SPEED, -12.0, -90.0, isMirrored);
+        turnToHeading(TURN_SPEED, 0.0, notMirrored);
     }
 
     /*

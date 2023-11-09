@@ -93,6 +93,8 @@ public class CenterStageTeleOp extends LinearOpMode {
         Intake intake = new Intake(hardwareMap,telemetry,gamepad1);
 
         SwingArm swingArm = new SwingArm(hardwareMap, telemetry, gamepad2, false);
+        ServoController board = new ServoController();
+        board.init(hardwareMap);
 
         // Initialize the IMU (Inertia Measurement Unit), used to detect the orientation of the robot
         // for Field-Oriented driving
@@ -143,9 +145,15 @@ public class CenterStageTeleOp extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             double max;
-
             intake.loop();
             swingArm.loop();
+            if (gamepad2.left_trigger > 0) {
+                board.setServoPosition(2.0);
+            } else if (gamepad2.right_trigger > 0) {
+                board.setServoPosition(0.0);
+            } else {
+                board.setServoPosition(1.0);
+            }
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
 
@@ -175,7 +183,7 @@ public class CenterStageTeleOp extends LinearOpMode {
             max = Math.max(max, Math.abs(leftBackPower));
             max = Math.max(max, Math.abs(rightBackPower));
 
-            if (max > 1.0) {
+            if (max > 0.5) {
                 leftFrontPower  /= max;
                 rightFrontPower /= max;
                 leftBackPower   /= max;
@@ -189,10 +197,10 @@ public class CenterStageTeleOp extends LinearOpMode {
             //   2) Then make sure they run in the correct direction by modifying the
             //      the setDirection() calls above.
             if (gamepad1.left_bumper) {
-                leftFrontPower = gamepad1.x ? 1.0 : 0.0;  // X gamepad
-                leftBackPower = gamepad1.a ? 1.0 : 0.0;   // A gamepad
-                rightFrontPower = gamepad1.y ? 1.0 : 0.0; // Y gamepad
-                rightBackPower = gamepad1.b ? 1.0 : 0.0;  // B gamepad
+                leftFrontPower = gamepad1.x ? 0.5 : 0.0;  // X gamepad
+                leftBackPower = gamepad1.a ? 0.5 : 0.0;   // A gamepad
+                rightFrontPower = gamepad1.y ? 0.5 : 0.0; // Y gamepad
+                rightBackPower = gamepad1.b ? 0.5 : 0.0;  // B gamepad
             }
 
             // Send calculated power to wheels

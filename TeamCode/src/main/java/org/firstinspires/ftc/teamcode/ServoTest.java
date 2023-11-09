@@ -16,9 +16,9 @@ public class ServoTest extends OpMode {
 
     @Override
     public void loop() {
-        if (gamepad1.a) {
+        if (gamepad2.a) {
             board.setServoPosition(1.0);
-        } else if (gamepad1.b) {
+        } else if (gamepad2.b) {
             board.setServoPosition(0.0);
         } else {
             board.setServoPosition(0.5);
