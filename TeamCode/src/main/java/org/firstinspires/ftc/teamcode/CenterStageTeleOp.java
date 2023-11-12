@@ -90,7 +90,7 @@ public class CenterStageTeleOp extends LinearOpMode {
         DcMotor frontRightDrive = hardwareMap.get(DcMotor.class, "right_driveF");
         DcMotor frontLeftDrive = hardwareMap.get(DcMotor.class, "left_driveF");
         DcMotor backLeftDrive = hardwareMap.get(DcMotor.class, "left_driveB");
-        Intake intake = new Intake(hardwareMap,telemetry,gamepad1);
+        Intake intake = new Intake(hardwareMap, telemetry, gamepad1);
 
         SwingArm swingArm = new SwingArm(hardwareMap, telemetry, gamepad2, false);
         ServoController board = new ServoController();
@@ -100,11 +100,11 @@ public class CenterStageTeleOp extends LinearOpMode {
         // for Field-Oriented driving
         IMU imu = hardwareMap.get(IMU.class, "imu");
 
-        imu.initialize(new IMU.Parameters(
-                new RevHubOrientationOnRobot(
-                        RevHubOrientationOnRobot.LogoFacingDirection.FORWARD,
-                        RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
-                )));
+//        imu.initialize(new IMU.Parameters(
+//                new RevHubOrientationOnRobot(
+//                        RevHubOrientationOnRobot.LogoFacingDirection.FORWARD,
+//                        RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
+//                )));
 
         // ########################################################################################
         // !!!            IMPORTANT Drive Information. Test your motor directions.            !!!!!
@@ -166,16 +166,17 @@ public class CenterStageTeleOp extends LinearOpMode {
             //imu.getRobotOrientation()
             //double botHeading = -imu.getAngularOrientation().firstAngle;
             YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-            double botHeading = orientation.getYaw(AngleUnit.RADIANS);
+            double botHeading = orientation.getYaw(AngleUnit.RADIANS); // +/- pi to flip heading 180
             double rotX = x * Math.cos(botHeading) + y * Math.sin(botHeading);
             double rotY = -x * Math.sin(botHeading) + y * Math.cos(botHeading);
+            telemetry.addData("heading radians:", botHeading);
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
-            double leftFrontPower  = rotY + rotX + rx;
+            double leftFrontPower = rotY + rotX + rx;
             double rightFrontPower = rotY - rotX - rx;
-            double leftBackPower   = rotY - rotX + rx;
-            double rightBackPower  = rotY + rotX - rx;
+            double leftBackPower = rotY - rotX + rx;
+            double rightBackPower = rotY + rotX - rx;
 
             // Normalize the values so no wheel power exceeds 100%
             // This ensures that the robot maintains the desired motion.
@@ -184,10 +185,10 @@ public class CenterStageTeleOp extends LinearOpMode {
             max = Math.max(max, Math.abs(rightBackPower));
 
             if (max > 0.5) {
-                leftFrontPower  /= max;
+                leftFrontPower /= max;
                 rightFrontPower /= max;
-                leftBackPower   /= max;
-                rightBackPower  /= max;
+                leftBackPower /= max;
+                rightBackPower /= max;
             }
 
             // Hold the left bumper and the corresponding button to run test code.
@@ -216,4 +217,5 @@ public class CenterStageTeleOp extends LinearOpMode {
             telemetry.addLine("LB + A/B/X/Y to test single motors");
             telemetry.update();
         }
-    }}
+    }
+}

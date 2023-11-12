@@ -102,32 +102,32 @@ import java.util.List;
 public class CenterStageAutonomous extends LinearOpMode {
 
     /* Declare OpMode members. */
-    protected DcMotor         leftDriveF   = null;
-    protected DcMotor         leftDriveB   = null;
-    protected DcMotor         rightDriveF  = null;
-    protected DcMotor         rightDriveB  = null;
-    protected IMU             imu          = null;      // Control/Expansion Hub IMU
+    protected DcMotor leftDriveF = null;
+    protected DcMotor leftDriveB = null;
+    protected DcMotor rightDriveF = null;
+    protected DcMotor rightDriveB = null;
+    protected IMU imu = null;      // Control/Expansion Hub IMU
     //protected SignalSleeveRecognizer    recognizer = null;
     //protected LinearSlide         linearSlide = null;
-    protected Intake        intake = null;
+    protected Intake intake = null;
     //protected SwingArm      swingArm = null;
     protected ElapsedTime runtime = new ElapsedTime();
 
-    private double          robotHeading  = 0;
-    private double          headingOffset = 0;
-    private double          headingError  = 0;
+    private double robotHeading = 0;
+    private double headingOffset = 0;
+    private double headingError = 0;
 
     // These variable are declared here (as class members) so they can be updated in various methods,
     // but still be displayed by sendTelemetry()
-    private double  targetHeading = 0;
-    private double  driveSpeed    = 0;
-    private double  turnSpeed     = 0;
-    private double  leftSpeed     = 0;
-    private double  rightSpeed    = 0;
-    private int     leftTargetF    = 0;
-    private int     leftTargetB    = 0;
-    private int     rightTargetF   = 0;
-    private int     rightTargetB   = 0;
+    private double targetHeading = 0;
+    private double driveSpeed = 0;
+    private double turnSpeed = 0;
+    private double leftSpeed = 0;
+    private double rightSpeed = 0;
+    private int leftTargetF = 0;
+    private int leftTargetB = 0;
+    private int rightTargetF = 0;
+    private int rightTargetB = 0;
 
     boolean isMirrored = true;
     boolean notMirrored = false;
@@ -147,10 +147,10 @@ public class CenterStageAutonomous extends LinearOpMode {
     // For example, use a value of 2.0 for a 12-tooth spur gear driving a 24-tooth spur gear.
     // This is gearing DOWN for less speed and more torque.
     // For gearing UP, use a gear ratio less than 1.0. Note this will affect the direction of wheel rotation.
-    static final double     COUNTS_PER_MOTOR_REV    = 28.0 ;   // eg: GoBILDA 312 RPM Yellow Jacket
-    static final double     DRIVE_GEAR_REDUCTION    = 18.0 ;    // No External Gearing.
-    static final double     WHEEL_DIAMETER_INCHES   = 3.0 ;     // For figuring circumference
-    static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+    static final double COUNTS_PER_MOTOR_REV = 28.0;   // eg: GoBILDA 312 RPM Yellow Jacket
+    static final double DRIVE_GEAR_REDUCTION = 18.0;    // No External Gearing.
+    static final double WHEEL_DIAMETER_INCHES = 3.0;     // For figuring circumference
+    static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * Math.PI);
 
     double MMperIN = 25.4;
@@ -169,16 +169,16 @@ public class CenterStageAutonomous extends LinearOpMode {
 
     // These constants define the desired driving/control characteristics
     // They can/should be tweaked to suit the specific robot drive train.
-    static final double     DRIVE_SPEED             = 0.5;     // Max driving speed for better distance accuracy.
-    static final double     TURN_SPEED              = 0.4;     // Max Turn speed to limit turn rate
-    static final double     HEADING_THRESHOLD       = 4.0 ;    // How close must the heading get to the target before moving to next step.
+    static final double DRIVE_SPEED = 0.2;     // Max driving speed for better distance accuracy.
+    static final double TURN_SPEED = 0.4;     // Max Turn speed to limit turn rate
+    static final double HEADING_THRESHOLD = 4.0;    // How close must the heading get to the target before moving to next step.
     // Requiring more accuracy (a smaller number) will often make the turn take longer to get into the final position.
     // Define the Proportional control coefficient (or GAIN) for "heading control".
     // We define one value when Turning (larger errors), and the other is used when Driving straight (smaller errors).
     // Increase these numbers if the heading does not corrects strongly enough (eg: a heavy robot or using tracks)
     // Decrease these numbers if the heading does not settle on the correct value (eg: very agile robot with omni wheels)
-    static final double     P_TURN_GAIN            = 0.02;     // Larger is more responsive, but also less stable
-    static final double     P_DRIVE_GAIN           = 0.03;     // Larger is more responsive, but also less stable
+    static final double P_TURN_GAIN = 0.02;     // Larger is more responsive, but also less stable
+    static final double P_DRIVE_GAIN = 0.03;     // Larger is more responsive, but also less stable
 
     //stuff that makes the left and right side autonomous (hopefully) work! :D
     // If your robot starts on the right side in the driver's view, (A2 or F5), set to 1
@@ -191,8 +191,8 @@ public class CenterStageAutonomous extends LinearOpMode {
 
     protected void setupRobot() {
         // Initialize the drive system variables.
-        leftDriveB  = hardwareMap.get(DcMotor.class, "left_driveB");
-        leftDriveF  = hardwareMap.get(DcMotor.class, "left_driveF");
+        leftDriveB = hardwareMap.get(DcMotor.class, "left_driveB");
+        leftDriveF = hardwareMap.get(DcMotor.class, "left_driveF");
         rightDriveB = hardwareMap.get(DcMotor.class, "right_driveB");
         rightDriveF = hardwareMap.get(DcMotor.class, "right_driveF");
         //recognizer = new SignalSleeveRecognizer(hardwareMap, telemetry);
@@ -253,7 +253,7 @@ public class CenterStageAutonomous extends LinearOpMode {
         // We can see if our loop runs faster if we essentially disable telemetry by putting
         // a high number here.
         // Change this so that we keep telemetry on during init but disable it during run mode
-        //telemetry.setMsTransmissionInterval(10000);
+        //telemetry.setMsTransmissionInterval(10000;)
     }
 
     /**
@@ -274,8 +274,15 @@ public class CenterStageAutonomous extends LinearOpMode {
         visionProcessor = new FirstVisionProcessor();
         visionPortal = VisionPortal.easyCreateWithDefaults(hardwareMap.get(WebcamName.class, "Webcam 1"), visionProcessor);
         while (opModeInInit()) {
-            telemetry.addData("", "Robot Heading = %4.0f", getRawHeading());
+            //telemetry.addData("", "Robot Heading = %4.0f", getRawHeading());
+            telemetry.addData("bot heading:", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
             telemetry.addData("Identified", visionProcessor.getSelection());
+
+            telemetry.addData("left front starting:", leftDriveF.getCurrentPosition());
+            telemetry.addData("left back starting:", leftDriveB.getCurrentPosition());
+            telemetry.addData("right front starting:", rightDriveF.getCurrentPosition());
+            telemetry.addData("right back starting:", rightDriveB.getCurrentPosition());
+
             visionProcessor.getSelection();
             if (gamepad1.left_trigger > 0) {
                 isFar = false;
@@ -309,51 +316,69 @@ public class CenterStageAutonomous extends LinearOpMode {
 
 
     public void runAutonomousProgram(String allianceColor, boolean isFar) {
-        if (allianceColor == "red") {
-            isRed = true;
-        } else {
-            isRed = false;
+
+        while (true) {
+            while (!(gamepad1.a || gamepad1.b || gamepad1.y)) {
+            }
+            if (gamepad1.a) {
+                driveStraight(DRIVE_SPEED, 18, 0, false);
+            } else if (gamepad1.b) {
+                driveStraight(DRIVE_SPEED, 40, 0, false);
+            } else if (gamepad1.y) {
+                driveStraight(DRIVE_SPEED, 80, 0, false);
+            } else if (gamepad1.dpad_down) {
+                driveStraight(DRIVE_SPEED, -12, 0, false);
+            } else if (gamepad1.dpad_right) {
+                driveStraight(DRIVE_SPEED, -24, 0, false);
+            } else if (gamepad1.dpad_up) {
+                driveStraight(DRIVE_SPEED, -48, 0, false);
+            }
         }
-
-        //move up to spike marks
-        driveStraight(DRIVE_SPEED, -20.0, 0.0, notMirrored);
-
-        //push to corresponding spike mark
-        switch (visionProcessor.selection) {
-            case LEFT:
-                turnToHeading(TURN_SPEED, -50.0, notMirrored);
-                driveStraight(DRIVE_SPEED, -25.0, -50.0, notMirrored);
-                driveStraight(DRIVE_SPEED, 31.0, -50.0, notMirrored);
-                turnToHeading(TURN_SPEED, 0.0, notMirrored);
-                break;
-            case MIDDLE:
-                driveStraight(DRIVE_SPEED, -29.0, 0.0, notMirrored);
-                driveStraight(DRIVE_SPEED, 29.0, 0.0, notMirrored);
-                break;
-            case RIGHT:
-                turnToHeading(TURN_SPEED, 50.0, notMirrored);
-                driveStraight(DRIVE_SPEED, -25.0, 50.0, notMirrored);
-                driveStraight(DRIVE_SPEED, 31.0, 50.0, notMirrored);
-                turnToHeading(TURN_SPEED, 0.0, notMirrored);
-                break;
-            case NONE:
-                driveStraight(DRIVE_SPEED, -29.0, 0.0, notMirrored);
-                driveStraight(DRIVE_SPEED, 29.0, 0.0, notMirrored);
-                break;
-        }
-
-        driveStraight(DRIVE_SPEED, 20.0, 0.0, notMirrored);
-        turnToHeading(TURN_SPEED, -90.0, isMirrored);
-
-        if (isFar) {
-            driveStraight(DRIVE_SPEED, -84.0, -90.0, isMirrored);
-        }
-        driveStraight(DRIVE_SPEED, -42.0, -90.0, isMirrored);
-
-        //april tags or alt parking
-
-        driveStraight(DRIVE_SPEED, -12.0, -90.0, isMirrored);
-        turnToHeading(TURN_SPEED, 0.0, notMirrored);
+        //        if (allianceColor == "red") {
+//            isRed = true;
+//        } else {
+//            isRed = false;
+//        }
+//
+//        //move up to spike marks
+//        driveStraight(DRIVE_SPEED, -20.0, 0.0, notMirrored);
+//
+//        //push to corresponding spike mark
+//        switch (visionProcessor.selection) {
+//            case LEFT:
+//                turnToHeading(TURN_SPEED, -50.0, notMirrored);
+//                driveStraight(DRIVE_SPEED, -25.0, -50.0, notMirrored);
+//                driveStraight(DRIVE_SPEED, 31.0, -50.0, notMirrored);
+//                turnToHeading(TURN_SPEED, 0.0, notMirrored);
+//                break;
+//            case MIDDLE:
+//                driveStraight(DRIVE_SPEED, -29.0, 0.0, notMirrored);
+//                driveStraight(DRIVE_SPEED, 29.0, 0.0, notMirrored);
+//                break;
+//            case RIGHT:
+//                turnToHeading(TURN_SPEED, 50.0, notMirrored);
+//                driveStraight(DRIVE_SPEED, -25.0, 50.0, notMirrored);
+//                driveStraight(DRIVE_SPEED, 31.0, 50.0, notMirrored);
+//                turnToHeading(TURN_SPEED, 0.0, notMirrored);
+//                break;
+//            case NONE:
+//                driveStraight(DRIVE_SPEED, -29.0, 0.0, notMirrored);
+//                driveStraight(DRIVE_SPEED, 29.0, 0.0, notMirrored);
+//                break;
+//        }
+//
+//        driveStraight(DRIVE_SPEED, 20.0, 0.0, notMirrored);
+//        turnToHeading(TURN_SPEED, -90.0, isMirrored);
+//
+//        if (isFar) {
+//            driveStraight(DRIVE_SPEED, -84.0, -90.0, isMirrored);
+//        }
+//        driveStraight(DRIVE_SPEED, -42.0, -90.0, isMirrored);
+//
+//        //april tags or alt parking
+//
+//        driveStraight(DRIVE_SPEED, -12.0, -90.0, isMirrored);
+//        turnToHeading(TURN_SPEED, 0.0, notMirrored);
     }
 
     /*
@@ -366,16 +391,16 @@ public class CenterStageAutonomous extends LinearOpMode {
     // **********  HIGH Level driving functions.  ********************
 
     /**
-     *  Method to drive in a straight line, on a fixed compass heading (angle), based on encoder counts.
-     *  Move will stop if either of these conditions occur:
-     *  1) Move gets to the desired position
-     *  2) Driver stops the opmode running.
+     * Method to drive in a straight line, on a fixed compass heading (angle), based on encoder counts.
+     * Move will stop if either of these conditions occur:
+     * 1) Move gets to the desired position
+     * 2) Driver stops the opmode running.
      *
      * @param maxDriveSpeed MAX Speed for forward/rev motion (range 0 to +1.0) .
-     * @param distance   Distance (in inches) to move from current position.  Negative distance means move backward.
-     * @param heading      Absolute Heading Angle (in Degrees) relative to last gyro reset.
-     *                   0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
-     *                   If a relative angle is required, add/subtract from the current robotHeading.
+     * @param distance      Distance (in inches) to move from current position.  Negative distance means move backward.
+     * @param heading       Absolute Heading Angle (in Degrees) relative to last gyro reset.
+     *                      0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
+     *                      If a relative angle is required, add/subtract from the current robotHeading.
      */
     public void driveStraight(double maxDriveSpeed,
                               double distance,
@@ -393,12 +418,17 @@ public class CenterStageAutonomous extends LinearOpMode {
             //heading = heading * reverseTurnsForAllianceColor;
 
             // Determine new target position, and pass to motor controller
-            int moveCounts = (int)(distance / inchesPerTick());
+            int moveCounts = (int) (distance / inchesPerTick());
 
             leftTargetF = leftDriveF.getCurrentPosition() + moveCounts;
             leftTargetB = leftDriveB.getCurrentPosition() + moveCounts;
             rightTargetF = rightDriveF.getCurrentPosition() + moveCounts;
             rightTargetB = rightDriveB.getCurrentPosition() + moveCounts;
+
+//            telemetry.addData("left front moved:", leftDriveF.getCurrentPosition());
+//            telemetry.addData("left back moved:", leftDriveB.getCurrentPosition());
+//            telemetry.addData("right front moved:", rightDriveF.getCurrentPosition());
+//            telemetry.addData("right back moved:", rightDriveB.getCurrentPosition());
 
             // Set Target FIRST, then turn on RUN_TO_POSITION
             leftDriveF.setTargetPosition(leftTargetF);
@@ -467,15 +497,15 @@ public class CenterStageAutonomous extends LinearOpMode {
     }
 
     /**
-     *  Method to spin on central axis to point in a new direction.
-     *  Move will stop if either of these conditions occur:
-     *  1) Move gets to the heading (angle)
-     *  2) Driver stops the opmode running.
+     * Method to spin on central axis to point in a new direction.
+     * Move will stop if either of these conditions occur:
+     * 1) Move gets to the heading (angle)
+     * 2) Driver stops the opmode running.
      *
      * @param maxTurnSpeed Desired MAX speed of turn. (range 0 to +1.0)
-     * @param heading Absolute Heading Angle (in Degrees) relative to last gyro reset.
-     *              0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
-     *              If a relative angle is required, add/subtract from current heading.
+     * @param heading      Absolute Heading Angle (in Degrees) relative to last gyro reset.
+     *                     0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
+     *                     If a relative angle is required, add/subtract from current heading.
      */
     public void turnToHeading(double maxTurnSpeed, double heading, boolean isMirrored) {
 
@@ -512,15 +542,15 @@ public class CenterStageAutonomous extends LinearOpMode {
     }
 
     /**
-     *  Method to obtain & hold a heading for a finite amount of time
-     *  Move will stop once the requested time has elapsed
-     *  This function is useful for giving the robot a moment to stabilize it's heading between movements.
+     * Method to obtain & hold a heading for a finite amount of time
+     * Move will stop once the requested time has elapsed
+     * This function is useful for giving the robot a moment to stabilize it's heading between movements.
      *
-     * @param maxTurnSpeed      Maximum differential turn speed (range 0 to +1.0)
-     * @param heading    Absolute Heading Angle (in Degrees) relative to last gyro reset.
-     *                   0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
-     *                   If a relative angle is required, add/subtract from current heading.
-     * @param holdTime   Length of time (in seconds) to hold the specified heading.
+     * @param maxTurnSpeed Maximum differential turn speed (range 0 to +1.0)
+     * @param heading      Absolute Heading Angle (in Degrees) relative to last gyro reset.
+     *                     0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
+     *                     If a relative angle is required, add/subtract from current heading.
+     * @param holdTime     Length of time (in seconds) to hold the specified heading.
      */
     public void holdHeading(double maxTurnSpeed, double heading, double holdTime, boolean reverseSides) {
 
@@ -560,9 +590,9 @@ public class CenterStageAutonomous extends LinearOpMode {
     /**
      * This method uses a Proportional Controller to determine how much steering correction is required.
      *
-     * @param desiredHeading        The desired absolute heading (relative to last heading reset)
-     * @param proportionalGain      Gain factor applied to heading error to obtain turning power.
-     * @return                      Turning power needed to get to required heading.
+     * @param desiredHeading   The desired absolute heading (relative to last heading reset)
+     * @param proportionalGain Gain factor applied to heading error to obtain turning power.
+     * @return Turning power needed to get to required heading.
      */
     public double getSteeringCorrection(double desiredHeading, double proportionalGain) {
         targetHeading = desiredHeading;  // Save for telemetry
@@ -574,7 +604,7 @@ public class CenterStageAutonomous extends LinearOpMode {
         headingError = targetHeading - robotHeading;
 
         // Normalize the error to be within +/- 180 degrees
-        while (headingError > 180)  headingError -= 360;
+        while (headingError > 180) headingError -= 360;
         while (headingError <= -180) headingError += 360;
 
         // Multiply the error by the gain to determine the required steering correction/  Limit the result to +/- 1.0
@@ -584,20 +614,20 @@ public class CenterStageAutonomous extends LinearOpMode {
     /**
      * This method takes separate drive (fwd/rev) and turn (right/left) requests,
      * combines them, and applies the appropriate speed commands to the left and right wheel motors.
+     *
      * @param drive forward motor speed
      * @param turn  clockwise turning motor speed.
      */
     public void moveRobot(double drive, double turn) {
         driveSpeed = drive;     // save this value as a class member so it can be used by telemetry.
-        turnSpeed  = turn;      // save this value as a class member so it can be used by telemetry.
+        turnSpeed = turn;      // save this value as a class member so it can be used by telemetry.
 
-        leftSpeed  = drive - turn;
+        leftSpeed = drive - turn;
         rightSpeed = drive + turn;
 
         // Scale speeds down if either one exceeds +/- 1.0;
         double max = Math.max(Math.abs(leftSpeed), Math.abs(rightSpeed));
-        if (max > 1.0)
-        {
+        if (max > 1.0) {
             leftSpeed /= max;
             rightSpeed /= max;
         }
@@ -617,28 +647,28 @@ public class CenterStageAutonomous extends LinearOpMode {
     }
 
     /**
-     *  Display the various control parameters while driving
+     * Display the various control parameters while driving
      *
-     * @param straight  Set to true if we are driving straight, and the encoder positions should be included in the telemetry.
+     * @param straight Set to true if we are driving straight, and the encoder positions should be included in the telemetry.
      */
     private void sendTelemetry(boolean straight) {
         if (straight) {
             telemetry.addData("Motion", "Drive Straight");
             telemetry.addData("Target Pos LF:RF:LB:RB", "%7d:%7d:%7d:%7d",
                     leftTargetF, rightTargetF, leftTargetB, rightTargetB);
-            telemetry.addData("Actual Pos LF:RF:LB:RB",  "%7d:%7d:%7d:%7d", leftDriveF.getCurrentPosition(),
+            telemetry.addData("Actual Pos LF:RF:LB:RB", "%7d:%7d:%7d:%7d", leftDriveF.getCurrentPosition(),
                     rightDriveF.getCurrentPosition(), leftDriveB.getCurrentPosition(), rightDriveB.getCurrentPosition());
         } else {
             telemetry.addData("Motion", "Turning");
         }
 
         telemetry.addData("Angle Target:Current", "%5.2f:%5.0f", targetHeading, robotHeading);
-        telemetry.addData("Error:Steer",  "%5.1f:%5.1f", headingError, turnSpeed);
+        telemetry.addData("Error:Steer", "%5.1f:%5.1f", headingError, turnSpeed);
         telemetry.addData("Wheel Speeds L:R.", "%5.2f : %5.2f", leftSpeed, rightSpeed);
 
         //checks the time spent on the loop and adds it to telemetry
 
-        telemetry.addData("Loop Time", (int)runtime.milliseconds());
+        telemetry.addData("Loop Time", (int) runtime.milliseconds());
 
         runtime.reset();
 
@@ -650,7 +680,7 @@ public class CenterStageAutonomous extends LinearOpMode {
      */
     public double getRawHeading() {
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        double botHeading = orientation.getYaw(AngleUnit.DEGREES);
+        double botHeading = orientation.getYaw(AngleUnit.DEGREES) + 180.0; // +/- 180 to flip heading
         return botHeading;
     }
 
@@ -662,6 +692,7 @@ public class CenterStageAutonomous extends LinearOpMode {
         headingOffset = getRawHeading();
         robotHeading = 0;
     }
+
     // TODO: can we rename these moveTo* functions for setHeightTo*
     public void moveToGroundPosition() {
         //linearSlide.setPosition(0);
