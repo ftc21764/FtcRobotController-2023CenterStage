@@ -100,11 +100,11 @@ public class CenterStageTeleOp extends LinearOpMode {
         // for Field-Oriented driving
         IMU imu = hardwareMap.get(IMU.class, "imu");
 
-//        imu.initialize(new IMU.Parameters(
-//                new RevHubOrientationOnRobot(
-//                        RevHubOrientationOnRobot.LogoFacingDirection.FORWARD,
-//                        RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
-//                )));
+        imu.initialize(new IMU.Parameters(
+                new RevHubOrientationOnRobot(
+                        RevHubOrientationOnRobot.LogoFacingDirection.FORWARD,
+                        RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
+                )));
 
         // ########################################################################################
         // !!!            IMPORTANT Drive Information. Test your motor directions.            !!!!!
@@ -129,13 +129,14 @@ public class CenterStageTeleOp extends LinearOpMode {
 //        frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
 //        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
 
-        frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Wait for the game to start (driver presses PLAY)
         telemetry.addData("Status", "Initialized");
+        telemetry.addData("front left counts:", frontLeftDrive.getCurrentPosition());
         swingArm.initLoop();
         telemetry.update();
 
@@ -168,14 +169,15 @@ public class CenterStageTeleOp extends LinearOpMode {
             YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
             double botHeading = orientation.getYaw(AngleUnit.RADIANS); // +/- pi to flip heading 180
             double rotX = x * Math.cos(botHeading) + y * Math.sin(botHeading);
-            double rotY = -x * Math.sin(botHeading) + y * Math.cos(botHeading);
+            double rotY = -x * Math.sin(botHeading) + y * Math.cos(botHeading); //-x * Math.sin(botHeading) + y * Math.cos(botHeading);
             telemetry.addData("heading radians:", botHeading);
+            telemetry.addData("front left counts:", frontLeftDrive.getCurrentPosition());
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
             double leftFrontPower = rotY + rotX + rx;
-            double rightFrontPower = rotY - rotX - rx;
             double leftBackPower = rotY - rotX + rx;
+            double rightFrontPower = rotY - rotX - rx;
             double rightBackPower = rotY + rotX - rx;
 
             // Normalize the values so no wheel power exceeds 100%
@@ -184,7 +186,7 @@ public class CenterStageTeleOp extends LinearOpMode {
             max = Math.max(max, Math.abs(leftBackPower));
             max = Math.max(max, Math.abs(rightBackPower));
 
-            if (max > 0.5) {
+            if (max > 1.0) {
                 leftFrontPower /= max;
                 rightFrontPower /= max;
                 leftBackPower /= max;
@@ -198,17 +200,17 @@ public class CenterStageTeleOp extends LinearOpMode {
             //   2) Then make sure they run in the correct direction by modifying the
             //      the setDirection() calls above.
             if (gamepad1.left_bumper) {
-                leftFrontPower = gamepad1.x ? 0.5 : 0.0;  // X gamepad
-                leftBackPower = gamepad1.a ? 0.5 : 0.0;   // A gamepad
-                rightFrontPower = gamepad1.y ? 0.5 : 0.0; // Y gamepad
-                rightBackPower = gamepad1.b ? 0.5 : 0.0;  // B gamepad
+                leftFrontPower = gamepad1.x ? 1.0 : 0.0;  // X gamepad
+                leftBackPower = gamepad1.a ? 1.0 : 0.0;   // A gamepad
+                rightFrontPower = gamepad1.y ? 1.0 : 0.0; // Y gamepad
+                rightBackPower = gamepad1.b ? 1.0 : 0.0;  // B gamepad
             }
 
             // Send calculated power to wheels
-            frontLeftDrive.setPower(leftFrontPower);
-            frontRightDrive.setPower(rightFrontPower);
-            backLeftDrive.setPower(leftBackPower);
-            backRightDrive.setPower(rightBackPower);
+            frontLeftDrive.setPower(leftFrontPower/2);
+            frontRightDrive.setPower(rightFrontPower/2);
+            backLeftDrive.setPower(leftBackPower/2);
+            backRightDrive.setPower(rightBackPower/2);
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime);

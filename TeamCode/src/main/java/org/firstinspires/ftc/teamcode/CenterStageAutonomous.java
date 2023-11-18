@@ -101,6 +101,9 @@ import java.util.List;
 //@Disabled
 public class CenterStageAutonomous extends LinearOpMode {
 
+    protected boolean Overrideselection = true;
+    protected FirstVisionProcessor.Selected selectionOverride = FirstVisionProcessor.Selected.RIGHT;
+
     /* Declare OpMode members. */
     protected DcMotor leftDriveF = null;
     protected DcMotor leftDriveB = null;
@@ -237,10 +240,10 @@ public class CenterStageAutonomous extends LinearOpMode {
         leftDriveB.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightDriveF.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightDriveB.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftDriveF.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        leftDriveB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightDriveF.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightDriveB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        leftDriveF.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        leftDriveB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        rightDriveF.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        rightDriveB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         allHubs = hardwareMap.getAll(LynxModule.class);
 
@@ -306,7 +309,7 @@ public class CenterStageAutonomous extends LinearOpMode {
         rightDriveB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         resetHeading();
 
-        runAutonomousProgram(allianceColor, isFar);
+        runAutonomousProgram(isFar);
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
@@ -315,70 +318,68 @@ public class CenterStageAutonomous extends LinearOpMode {
     }
 
 
-    public void runAutonomousProgram(String allianceColor, boolean isFar) {
+    public void runAutonomousProgram(boolean isFar) {
 
-        while (true) {
-            while (!(gamepad1.a || gamepad1.b || gamepad1.y)) {
-            }
-            if (gamepad1.a) {
-                driveStraight(DRIVE_SPEED, 18, 0, false);
-            } else if (gamepad1.b) {
-                driveStraight(DRIVE_SPEED, 40, 0, false);
-            } else if (gamepad1.y) {
-                driveStraight(DRIVE_SPEED, 80, 0, false);
-            } else if (gamepad1.dpad_down) {
-                driveStraight(DRIVE_SPEED, -12, 0, false);
-            } else if (gamepad1.dpad_right) {
-                driveStraight(DRIVE_SPEED, -24, 0, false);
-            } else if (gamepad1.dpad_up) {
-                driveStraight(DRIVE_SPEED, -48, 0, false);
-            }
+//        while (true) {
+//            while (!(gamepad1.a || gamepad1.b || gamepad1.y)) {
+//            }
+//            if (gamepad1.a) {
+//                driveStraight(DRIVE_SPEED, -19, 0, false);
+//            } else if (gamepad1.b) {
+//                driveStraight(DRIVE_SPEED, -40, 0, false);
+//            } else if (gamepad1.y) {
+//                driveStraight(DRIVE_SPEED, -80, 0, false);
+//            } else if (gamepad1.dpad_down) {
+//                driveStraight(DRIVE_SPEED, -12, 0, false);
+//            } else if (gamepad1.dpad_right) {
+//                driveStraight(DRIVE_SPEED, -24, 0, false);
+//            } else if (gamepad1.dpad_up) {
+//                driveStraight(DRIVE_SPEED, -48, 0, false);
+//            }
+//        }
+
+        //move up to spike marks
+        driveStraight(DRIVE_SPEED/2, -20.0, 180.0, notMirrored);
+        FirstVisionProcessor.Selected selected = visionProcessor.selection;
+        if(Overrideselection){
+            selected = selectionOverride;
         }
-        //        if (allianceColor == "red") {
-//            isRed = true;
-//        } else {
-//            isRed = false;
-//        }
-//
-//        //move up to spike marks
-//        driveStraight(DRIVE_SPEED, -20.0, 0.0, notMirrored);
-//
-//        //push to corresponding spike mark
-//        switch (visionProcessor.selection) {
-//            case LEFT:
-//                turnToHeading(TURN_SPEED, -50.0, notMirrored);
-//                driveStraight(DRIVE_SPEED, -25.0, -50.0, notMirrored);
-//                driveStraight(DRIVE_SPEED, 31.0, -50.0, notMirrored);
-//                turnToHeading(TURN_SPEED, 0.0, notMirrored);
-//                break;
-//            case MIDDLE:
-//                driveStraight(DRIVE_SPEED, -29.0, 0.0, notMirrored);
-//                driveStraight(DRIVE_SPEED, 29.0, 0.0, notMirrored);
-//                break;
-//            case RIGHT:
-//                turnToHeading(TURN_SPEED, 50.0, notMirrored);
-//                driveStraight(DRIVE_SPEED, -25.0, 50.0, notMirrored);
-//                driveStraight(DRIVE_SPEED, 31.0, 50.0, notMirrored);
-//                turnToHeading(TURN_SPEED, 0.0, notMirrored);
-//                break;
-//            case NONE:
-//                driveStraight(DRIVE_SPEED, -29.0, 0.0, notMirrored);
-//                driveStraight(DRIVE_SPEED, 29.0, 0.0, notMirrored);
-//                break;
-//        }
-//
-//        driveStraight(DRIVE_SPEED, 20.0, 0.0, notMirrored);
-//        turnToHeading(TURN_SPEED, -90.0, isMirrored);
-//
-//        if (isFar) {
-//            driveStraight(DRIVE_SPEED, -84.0, -90.0, isMirrored);
-//        }
-//        driveStraight(DRIVE_SPEED, -42.0, -90.0, isMirrored);
-//
-//        //april tags or alt parking
-//
-//        driveStraight(DRIVE_SPEED, -12.0, -90.0, isMirrored);
-//        turnToHeading(TURN_SPEED, 0.0, notMirrored);
+        //push to corresponding spike mark
+        switch (selected) {
+            case LEFT:
+                turnToHeading(TURN_SPEED, -35.0, notMirrored);
+                driveStraight(DRIVE_SPEED, -27.0, -35.0, notMirrored);
+                driveStraight(DRIVE_SPEED, 33.0, -35.0, notMirrored);
+                turnToHeading(TURN_SPEED, 0.0, notMirrored);
+                break;
+            case MIDDLE:
+                driveStraight(DRIVE_SPEED, -29.0, 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED, 29.0, 0.0, notMirrored);
+                break;
+            case RIGHT:
+                turnToHeading(TURN_SPEED, 35.0, notMirrored);
+                driveStraight(DRIVE_SPEED, -27.0, 35.0, notMirrored);
+                driveStraight(DRIVE_SPEED, 33.0, 35.0, notMirrored);
+                turnToHeading(TURN_SPEED, 0.0, notMirrored);
+                break;
+            case NONE:
+                driveStraight(DRIVE_SPEED, -29.0, 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED, 29.0, 0.0, notMirrored);
+                break;
+        }
+
+        driveStraight(DRIVE_SPEED, 10.0, 0.0, notMirrored);
+        turnToHeading(TURN_SPEED, 90.0, isMirrored);
+
+        if (isFar) {
+            driveStraight(DRIVE_SPEED/2, -84.0, 90.0, isMirrored);
+        }
+        driveStraight(DRIVE_SPEED/2, -42.0, 90.0, isMirrored);
+
+        //april tags or alt parking
+
+        driveStraight(DRIVE_SPEED, -12.0, 90.0, isMirrored);
+        turnToHeading(TURN_SPEED, 0.0, notMirrored);
     }
 
     /*
@@ -438,6 +439,7 @@ public class CenterStageAutonomous extends LinearOpMode {
 
             telemetry.addData("driveStraight", "opModeIsActive");
             telemetry.addData("targetPositions", "%d : %d : %d : %d", leftTargetF, leftTargetB, rightTargetF, rightTargetB);
+            telemetry.addData("move counts:", moveCounts);
             telemetry.update();
 
             leftDriveF.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -680,7 +682,7 @@ public class CenterStageAutonomous extends LinearOpMode {
      */
     public double getRawHeading() {
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        double botHeading = orientation.getYaw(AngleUnit.DEGREES) + 180.0; // +/- 180 to flip heading
+        double botHeading = orientation.getYaw(AngleUnit.DEGREES);  // + 180.0; // +/- 180 to flip heading
         return botHeading;
     }
 
