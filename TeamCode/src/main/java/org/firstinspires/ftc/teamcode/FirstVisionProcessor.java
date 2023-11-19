@@ -14,9 +14,10 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 public class FirstVisionProcessor implements VisionProcessor {
-    public Rect rectLeft = new Rect(30, 165, 80, 80);
-    public Rect rectMiddle = new Rect(275, 100, 80, 80);
-    public Rect rectRight = new Rect(505, 165, 80, 80);
+    public Rect rectLeft = new Rect(0, 120, 210, 300);
+    public Rect rectMiddle = new Rect(213, 120, 210, 300);
+    public Rect rectRight = new Rect(426, 120, 210, 300);
+
     Selected selection = Selected.NONE;
 
     Mat submat = new Mat();
@@ -39,7 +40,11 @@ public class FirstVisionProcessor implements VisionProcessor {
         } else if ((satRectMiddle > satRectLeft) && (satRectMiddle > satRectRight)) {
             return Selected.MIDDLE;
         }
-        return Selected.RIGHT;
+        else {
+            return Selected.RIGHT;
+        }
+
+        // threshold at some pooint?
     }
 
     protected double getAvgSaturation(Mat input, Rect rect) {

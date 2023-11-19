@@ -29,22 +29,17 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.vision.VisionPortal;
 
@@ -102,7 +97,7 @@ import java.util.List;
 public class CenterStageAutonomous extends LinearOpMode {
 
     protected boolean Overrideselection = true;
-    protected FirstVisionProcessor.Selected selectionOverride = FirstVisionProcessor.Selected.RIGHT;
+    protected FirstVisionProcessor.Selected selectionOverride = FirstVisionProcessor.Selected.MIDDLE;
 
     /* Declare OpMode members. */
     protected DcMotor leftDriveF = null;
@@ -137,10 +132,11 @@ public class CenterStageAutonomous extends LinearOpMode {
     boolean isRed;
 
     boolean isFar = true;
+    boolean park = true;
 
-    String allianceColor = "blue";
+    //String allianceColor = "blue";
 
-    private FirstVisionProcessor visionProcessor;
+    private FirstVisionProcessor propDetector;
 
     private VisionPortal visionPortal;
 
@@ -274,19 +270,19 @@ public class CenterStageAutonomous extends LinearOpMode {
     public void runOpMode() {
         setupRobot();
         // Wait for the game to start (Display Gyro value while waiting)
-        visionProcessor = new FirstVisionProcessor();
-        visionPortal = VisionPortal.easyCreateWithDefaults(hardwareMap.get(WebcamName.class, "Webcam 1"), visionProcessor);
+        propDetector = new FirstVisionProcessor();
+        visionPortal = VisionPortal.easyCreateWithDefaults(hardwareMap.get(WebcamName.class, "Webcam 1"), propDetector);
         while (opModeInInit()) {
             //telemetry.addData("", "Robot Heading = %4.0f", getRawHeading());
             telemetry.addData("bot heading:", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
-            telemetry.addData("Identified", visionProcessor.getSelection());
+            telemetry.addData("Identified", propDetector.getSelection());
 
             telemetry.addData("left front starting:", leftDriveF.getCurrentPosition());
             telemetry.addData("left back starting:", leftDriveB.getCurrentPosition());
             telemetry.addData("right front starting:", rightDriveF.getCurrentPosition());
             telemetry.addData("right back starting:", rightDriveB.getCurrentPosition());
 
-            visionProcessor.getSelection();
+            propDetector.getSelection();
             if (gamepad1.left_trigger > 0) {
                 isFar = false;
             } else if (gamepad1.right_trigger > 0) {
@@ -309,7 +305,7 @@ public class CenterStageAutonomous extends LinearOpMode {
         rightDriveB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         resetHeading();
 
-        runAutonomousProgram(isFar);
+        runAutonomousProgram(isFar, park);
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
@@ -318,7 +314,7 @@ public class CenterStageAutonomous extends LinearOpMode {
     }
 
 
-    public void runAutonomousProgram(boolean isFar) {
+    public void runAutonomousProgram(boolean isFar, boolean parking) {
 
 //        while (true) {
 //            while (!(gamepad1.a || gamepad1.b || gamepad1.y)) {
@@ -339,31 +335,36 @@ public class CenterStageAutonomous extends LinearOpMode {
 //        }
 
         //move up to spike marks
-        driveStraight(DRIVE_SPEED/2, -20.0, 180.0, notMirrored);
-        FirstVisionProcessor.Selected selected = visionProcessor.selection;
+        double distance = -20.0;
+
+        FirstVisionProcessor.Selected selected = propDetector.selection;
         if(Overrideselection){
             selected = selectionOverride;
         }
         //push to corresponding spike mark
         switch (selected) {
             case LEFT:
+                driveStraight(DRIVE_SPEED/2, -20.0, 180.0, notMirrored);
                 turnToHeading(TURN_SPEED, -35.0, notMirrored);
                 driveStraight(DRIVE_SPEED, -27.0, -35.0, notMirrored);
                 driveStraight(DRIVE_SPEED, 33.0, -35.0, notMirrored);
                 turnToHeading(TURN_SPEED, 0.0, notMirrored);
                 break;
             case MIDDLE:
-                driveStraight(DRIVE_SPEED, -29.0, 0.0, notMirrored);
+                distance -= 29;
+                driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
                 driveStraight(DRIVE_SPEED, 29.0, 0.0, notMirrored);
                 break;
             case RIGHT:
+                driveStraight(DRIVE_SPEED/2, -20.0, 180.0, notMirrored);
                 turnToHeading(TURN_SPEED, 35.0, notMirrored);
                 driveStraight(DRIVE_SPEED, -27.0, 35.0, notMirrored);
                 driveStraight(DRIVE_SPEED, 33.0, 35.0, notMirrored);
                 turnToHeading(TURN_SPEED, 0.0, notMirrored);
                 break;
             case NONE:
-                driveStraight(DRIVE_SPEED, -29.0, 0.0, notMirrored);
+                distance -= 29;
+                driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
                 driveStraight(DRIVE_SPEED, 29.0, 0.0, notMirrored);
                 break;
         }
@@ -371,14 +372,17 @@ public class CenterStageAutonomous extends LinearOpMode {
         driveStraight(DRIVE_SPEED, 10.0, 0.0, notMirrored);
         turnToHeading(TURN_SPEED, 90.0, isMirrored);
 
+        distance = -42;
+
         if (isFar) {
-            driveStraight(DRIVE_SPEED/2, -84.0, 90.0, isMirrored);
+            distance -= 84;
         }
-        driveStraight(DRIVE_SPEED/2, -42.0, 90.0, isMirrored);
+        if (parking) {
+            distance -= 12;
+        }
+        driveStraight(DRIVE_SPEED, distance, 90.0, isMirrored);
 
         //april tags or alt parking
-
-        driveStraight(DRIVE_SPEED, -12.0, 90.0, isMirrored);
         turnToHeading(TURN_SPEED, 0.0, notMirrored);
     }
 

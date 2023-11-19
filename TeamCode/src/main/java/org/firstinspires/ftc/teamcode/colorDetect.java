@@ -1,65 +1,73 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.hardware.HardwareMap;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvPipeline;
 
-//public class colorDetect extends OpenCvPipeline {
-//    Mat mat = new Mat();
-//    @Override
-//    public Mat processFrame(Mat input) {
-//        Imgproc.cvtColor(input, mat, Imgproc.COLOR_RGBA2BGR);
-//        Imgproc.cvtColor(input, mat, Imgproc.COLOR_BGR2HSV);
-//        Scalar lowerBound = new Scalar(1, 1, 1);
-//        return ;
-//    }
-//}
+import java.util.ArrayList;
+import java.util.List;
 
+public class colorDetect extends OpenCvPipeline {
+    Mat mat = new Mat();
+//    Rect leftROI = new Rect(new Point(0, 0), new Point(183, 300));
+//    Rect centerROI = new Rect(new Point(183, 0), new Point(366, 300));
+//    Rect rightROI = new Rect(new Point(366, 0), new Point(550, 300));
+//    Mat leftMat;
+//    Mat centerMat;
+//    Mat rightMat;
+    Telemetry telemetry;
 
-//import org.opencv.core.Core;
-//import org.opencv.core.Mat;
-//import org.opencv.core.MatOfPoint;
-//import org.opencv.core.Scalar;
-//import org.opencv.imgproc.Imgproc;
-//import org.opencv.core.MatOfPoint2f;
-//import org.opencv.core.Rect;
-//import org.openftc.easyopencv.OpenCvPipeline;
-//
-//import java.util.List;
-//import java.util.ArrayList;
-//
-//public class colorDetect {
-//    public void processFrame(Mat input) {
-//        Scalar redLowerRange = new Scalar(136, 87, 111);
-//        Scalar redUpperRange = new Scalar(180, 255, 255);
-//
-//        Scalar blueLowerRange = new Scalar(94, 80, 2);
-//        Scalar blueUpperRange = new Scalar(120, 255, 255);
-//
-//        Mat redMat = new Mat();
-//        Mat blueMat = new Mat();
-//        Imgproc.cvtColor(input, redMat, Imgproc.COLOR_RGB2HSV);
-//        Imgproc.cvtColor(input, blueMat, Imgproc.COLOR_RGB2HSV);
-//
-//        Mat redThresh = new Mat();
-//        Mat blueThresh = new Mat();
-//
-//        Core.inRange(redMat, redLowerRange, redUpperRange, redThresh);
-//        Core.inRange(blueMat, blueLowerRange, blueUpperRange, blueThresh);
-//
-//        Mat redEdges = new Mat();
-//        Imgproc.Canny(redThresh, redEdges, 100, 300); //TUNE AS NECESSARY
-//
-//        Mat blueEdges = new Mat();
-//        Imgproc.Canny(blueThresh, blueEdges, 100, 300); //TUNE AS NECESSARY
-//
-//        List<MatOfPoint> redContours = new ArrayList<>();
-//        Mat redHierarchy = new Mat();
-//        Imgproc.findContours(redEdges, redContours, redHierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-//
-//        List<MatOfPoint> blueContours = new ArrayList<>();
-//        Mat blueHierarchy = new Mat();
-//        Imgproc.findContours(redEdges, redContours, redHierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+//    public colorDetect (HardwareMap hwMap, Telemetry t) {
+//        telemetry = t;
+//        int camMonViewId = = hwMap.appContext.getResources.getIdentifier
 //    }
-//}
+
+    @Override
+    public Mat processFrame(Mat input) {
+
+        Imgproc.cvtColor(input, mat, Imgproc.COLOR_RGBA2BGR);
+        Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2HSV);
+
+        Scalar lowerBound = new Scalar(136, 87, 111); //red lower range
+        Scalar upperBound = new Scalar(180, 255, 255); //red upper range
+
+        Core.inRange(mat, lowerBound, upperBound, mat);
+
+        List<MatOfPoint> contours = new ArrayList<>();
+        Mat hierarchy = new Mat();
+        Imgproc.findContours(mat, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_NONE);
+
+        for (MatOfPoint contour : contours) {
+            MatOfPoint2f copy = new MatOfPoint2f(contour.toArray());
+            Rect rect = Imgproc.boundingRect(copy);
+            int blobX = rect.x;
+            int blobY = rect.y;
+            contour.release();
+            copy.release();
+
+        }
+
+//        leftMat = mat.submat(leftROI);
+//        centerMat = mat.submat(centerROI);
+//        rightMat = mat.submat(rightROI);
+//
+//        double leftVal = Math.round(Core.mean(leftMat).val[2] / 255);
+//        double centerVal = Math.round(Core.mean(centerMat).val[2] / 255);
+//        double rightVal = Math.round(Core.mean(rightMat).val[2] / 255);
+//
+//        leftMat.release();
+//        centerMat.release();
+//        rightMat.release();
+//        mat.release();
+        return null;
+    }
+}
