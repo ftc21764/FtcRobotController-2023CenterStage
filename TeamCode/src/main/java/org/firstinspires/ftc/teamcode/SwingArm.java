@@ -37,7 +37,7 @@ public class SwingArm {
     //static final int TIMEOUT_SECONDS = 10;
 
 //    11109
-    static final int PICKUP_POINT_COUNT = 10;  // 10
+    static final int PICKUP_POINT_COUNT = 75;  // 10
     static final int CARRY_POINT_COUNT = 700;
     static final int DELIVERY_POINT_COUNT = 2110;
 
@@ -49,7 +49,8 @@ public class SwingArm {
     boolean isAutonomous;
 
     static final int HIGH_HARDSTOP = DELIVERY_POINT_COUNT + 200;
-    static final int LOW_HARDSTOP = PICKUP_POINT_COUNT;
+    static final int LOW_HARDSTOP = 0;
+    static final int DRIVE_POINT_COUNT = 100;
 
     public SwingArm(HardwareMap hardwareMap, Telemetry telemetry, Gamepad gamepad, boolean isAutonomous) {
         this.hardwareMap = hardwareMap;
@@ -77,6 +78,7 @@ public class SwingArm {
         //swingArmMotor.getCurrentPosition());
         telemetry.addData("Arm Motor Starting At",  "%7d",
                 armMotor.getCurrentPosition());
+        telemetry.update();
     }
 
     /**
@@ -86,12 +88,17 @@ public class SwingArm {
      * and high (2)
      */
     public void setPosition(int position) {
-        if (position == 1) {
+        if (position == 0) {
+            targetPositionCount = LOW_HARDSTOP;
+        }
+        else if (position == 1) {
             targetPositionCount = PICKUP_POINT_COUNT;
         } else if (position == 2) {
             targetPositionCount = CARRY_POINT_COUNT;
         } else if (position == 3) {
             targetPositionCount = DELIVERY_POINT_COUNT;
+        } else if (position == 4) {
+            targetPositionCount = DRIVE_POINT_COUNT;
         } else {
             return;
         }
@@ -163,7 +170,7 @@ public class SwingArm {
     public void loop() {
         double currentPosition = armMotor.getCurrentPosition();
         //telemetry.addData("Swing Arm Motor 1 Position is:", swingArmMotor.getCurrentPosition());
-        telemetry.addData("Swing Arm Motor 2 Position is:", armMotor.getCurrentPosition());
+        telemetry.addData("Swing Arm Motor Position is:", armMotor.getCurrentPosition());
         readGamepad(gamepad);
         setPower(currentPosition);
         telemetry.addData("Swing arm target position", targetPositionCount);

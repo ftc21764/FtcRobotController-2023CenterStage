@@ -96,8 +96,8 @@ import java.util.List;
 //@Disabled
 public class CenterStageAutonomous extends LinearOpMode {
 
-    protected boolean Overrideselection = true;
-    protected FirstVisionProcessor.Selected selectionOverride = FirstVisionProcessor.Selected.MIDDLE;
+    protected boolean Overrideselection = false;
+//    protected FirstVisionProcessor.Selected selectionOverride = FirstVisionProcessor.Selected.MIDDLE;
 
     /* Declare OpMode members. */
     protected DcMotor leftDriveF = null;
@@ -108,7 +108,7 @@ public class CenterStageAutonomous extends LinearOpMode {
     //protected SignalSleeveRecognizer    recognizer = null;
     //protected LinearSlide         linearSlide = null;
     protected Intake intake = null;
-    //protected SwingArm      swingArm = null;
+    protected SwingArm swingArm = null;
     protected ElapsedTime runtime = new ElapsedTime();
 
     private double robotHeading = 0;
@@ -132,13 +132,23 @@ public class CenterStageAutonomous extends LinearOpMode {
     boolean isRed;
 
     boolean isFar = true;
-    boolean park = true;
+    boolean parkOnly = true;
+    boolean trianglePark = false;
+
+    int armHardStop = 0;
+    int armPickUp = 1;
+    int armCarry = 2;
+    int armDelivery = 3;
+    int armDrivePos = 4;
+
 
     //String allianceColor = "blue";
 
     private FirstVisionProcessor propDetector;
 
     private VisionPortal visionPortal;
+
+    protected FirstVisionProcessor.Selected selectionOverride;
 
     // Calculate the COUNTS_PER_INCH for your specific drive train.
     // Go to your motor vendor website to determine your motor's COUNTS_PER_MOTOR_REV
@@ -197,6 +207,7 @@ public class CenterStageAutonomous extends LinearOpMode {
         //recognizer = new SignalSleeveRecognizer(hardwareMap, telemetry);
         //linearSlide = new LinearSlide(hardwareMap, telemetry, gamepad2);
         intake = new Intake(hardwareMap, telemetry, gamepad2);
+        swingArm = new SwingArm(hardwareMap, telemetry, gamepad2, true);
         //swingArm = new SwingArm(hardwareMap, telemetry, gamepad2, isAutonomous);
 
         boolean isNear;
@@ -263,7 +274,7 @@ public class CenterStageAutonomous extends LinearOpMode {
     protected void mechanismLoop() {
         //linearSlide.loop();
         //intake.loop();
-        //swingArm.loop();
+        swingArm.loop();
     }
 
     @Override
@@ -282,6 +293,10 @@ public class CenterStageAutonomous extends LinearOpMode {
             telemetry.addData("right front starting:", rightDriveF.getCurrentPosition());
             telemetry.addData("right back starting:", rightDriveB.getCurrentPosition());
 
+            telemetry.addData( "SwingArmPosition", swingArm.armMotor.getCurrentPosition());
+
+            telemetry.update();
+
             propDetector.getSelection();
             if (gamepad1.left_trigger > 0) {
                 isFar = false;
@@ -293,9 +308,26 @@ public class CenterStageAutonomous extends LinearOpMode {
             } else if (gamepad1.b) {
                 isRed = true;
             }
+
+            //for testing (not legal in game):
+            if (gamepad1.left_bumper) {
+                selectionOverride = FirstVisionProcessor.Selected.LEFT;
+            }
+            else if (gamepad1.right_bumper) {
+                selectionOverride = FirstVisionProcessor.Selected.RIGHT;
+            }
+            else {
+                selectionOverride = FirstVisionProcessor.Selected.MIDDLE;
+            }
+            if (Overrideselection) {
+                telemetry.addData("OVERRIDE:", selectionOverride);
+            }
+
+            parkOnly = false; // add gamepad input later
+            trianglePark = false; // add gamepad input later
+
             telemetry.addData("isRed:", isRed);
             telemetry.addData("isFar:", isFar);
-            telemetry.update();
         }
 
         // Set the encoders for closed loop speed control, and reset the heading.
@@ -305,7 +337,9 @@ public class CenterStageAutonomous extends LinearOpMode {
         rightDriveB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         resetHeading();
 
-        runAutonomousProgram(isFar, park);
+        visionPortal.stopStreaming();
+
+        runAutonomousProgram(isFar, parkOnly, trianglePark);
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
@@ -314,7 +348,12 @@ public class CenterStageAutonomous extends LinearOpMode {
     }
 
 
-    public void runAutonomousProgram(boolean isFar, boolean parking) {
+    public void runAutonomousProgram(boolean isFar, boolean parkOnly, boolean trianglePark) {
+
+        //remove the /2 in drivespeed and troubleshoot
+
+        swingArm.setPosition(armDrivePos);
+        telemetry.addData( "SwingArmPosition", swingArm.armMotor.getCurrentPosition());
 
 //        while (true) {
 //            while (!(gamepad1.a || gamepad1.b || gamepad1.y)) {
@@ -338,38 +377,42 @@ public class CenterStageAutonomous extends LinearOpMode {
         double distance = -20.0;
 
         FirstVisionProcessor.Selected selected = propDetector.selection;
+
         if(Overrideselection){
             selected = selectionOverride;
         }
         //push to corresponding spike mark
         switch (selected) {
             case LEFT:
-                driveStraight(DRIVE_SPEED/2, -20.0, 180.0, notMirrored);
-                turnToHeading(TURN_SPEED, -35.0, notMirrored);
-                driveStraight(DRIVE_SPEED, -27.0, -35.0, notMirrored);
-                driveStraight(DRIVE_SPEED, 33.0, -35.0, notMirrored);
-                turnToHeading(TURN_SPEED, 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED/2, (distance + 5), 180.0, notMirrored);
+                turnToHeading(TURN_SPEED/2, 35.0, notMirrored);
+                driveStraight(DRIVE_SPEED/2, -27.0, 35.0, notMirrored);
+                driveStraight(DRIVE_SPEED/2, 33.0, 35.0, notMirrored);
+                turnToHeading(TURN_SPEED/2, 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED/2, 10.0, 0.0, notMirrored);
                 break;
             case MIDDLE:
                 distance -= 29;
                 driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
-                driveStraight(DRIVE_SPEED, 29.0, 0.0, notMirrored);
+                //driveStraight(DRIVE_SPEED, (-distance + 10.0), 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED, (-distance - 5.0), 0.0, notMirrored);
                 break;
             case RIGHT:
-                driveStraight(DRIVE_SPEED/2, -20.0, 180.0, notMirrored);
-                turnToHeading(TURN_SPEED, 35.0, notMirrored);
-                driveStraight(DRIVE_SPEED, -27.0, 35.0, notMirrored);
-                driveStraight(DRIVE_SPEED, 33.0, 35.0, notMirrored);
-                turnToHeading(TURN_SPEED, 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED/2, (distance + 5), 180.0, notMirrored);
+                turnToHeading(TURN_SPEED/2, -35.0, notMirrored);
+                driveStraight(DRIVE_SPEED/2, -27.0, -35.0, notMirrored);
+                driveStraight(DRIVE_SPEED/2, 33.0, -35.0, notMirrored);
+                turnToHeading(TURN_SPEED/2, 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED/2, 10.0, 0.0, notMirrored);
                 break;
             case NONE:
                 distance -= 29;
                 driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
-                driveStraight(DRIVE_SPEED, 29.0, 0.0, notMirrored);
+                //driveStraight(DRIVE_SPEED, (-distance + 10.0), 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED, (-distance - 5.0), 0.0, notMirrored);
                 break;
         }
 
-        driveStraight(DRIVE_SPEED, 10.0, 0.0, notMirrored);
         turnToHeading(TURN_SPEED, 90.0, isMirrored);
 
         distance = -42;
@@ -377,13 +420,36 @@ public class CenterStageAutonomous extends LinearOpMode {
         if (isFar) {
             distance -= 84;
         }
-        if (parking) {
-            distance -= 12;
+        if (parkOnly) {
+            distance -= 32; //used to be 12
         }
+
         driveStraight(DRIVE_SPEED, distance, 90.0, isMirrored);
 
+        if (!parkOnly) {
+            turnToHeading(TURN_SPEED, 0.0, notMirrored);
+            driveStraight(DRIVE_SPEED/2, -40.0, 0.0, notMirrored);
+            turnToHeading(TURN_SPEED, 90.0, isMirrored);
+            swingArm.setPosition(armDelivery);
+//            swingArm.setPosition(armDrivePos);
+//            if (trianglePark) {
+//                turnToHeading(TURN_SPEED, 0.0, notMirrored);
+//                driveStraight(DRIVE_SPEED/2, -32.0, 0.0, notMirrored);
+//                turnToHeading(TURN_SPEED, 90.0, isMirrored);
+//                driveStraight(DRIVE_SPEED/2, -36.0, 90.0, isMirrored);
+//            } else {
+//                turnToHeading(TURN_SPEED, 0.0, notMirrored);
+//                driveStraight(DRIVE_SPEED/2, 32.0, 0.0, notMirrored);
+//                turnToHeading(TURN_SPEED, 90.0, isMirrored);
+//                driveStraight(DRIVE_SPEED/2, -36.0, 90.0, isMirrored);
+//            }
+        }
+
         //april tags or alt parking
-        turnToHeading(TURN_SPEED, 0.0, notMirrored);
+        //turnToHeading(TURN_SPEED, 0.0, notMirrored);
+
+        swingArm.setPosition(armHardStop);
+        telemetry.addData( "SwingArmPosition", swingArm.armMotor.getCurrentPosition());
     }
 
     /*

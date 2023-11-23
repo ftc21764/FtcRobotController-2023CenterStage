@@ -44,7 +44,7 @@ public class colorDetect extends OpenCvPipeline {
 
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
-        Imgproc.findContours(mat, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_NONE);
+        Imgproc.findContours(mat, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
         for (MatOfPoint contour : contours) {
             MatOfPoint2f copy = new MatOfPoint2f(contour.toArray());
@@ -68,6 +68,7 @@ public class colorDetect extends OpenCvPipeline {
 //        centerMat.release();
 //        rightMat.release();
 //        mat.release();
+
         return null;
     }
 }
