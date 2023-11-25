@@ -29,6 +29,8 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Size;
+
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -42,6 +44,8 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
 
@@ -146,9 +150,15 @@ public class CenterStageAutonomous extends LinearOpMode {
 
     private FirstVisionProcessor propDetector;
 
-    private VisionPortal visionPortal;
+    private VisionPortal propVisionPortal;
 
     protected FirstVisionProcessor.Selected selectionOverride;
+
+    private AprilTagProcessor tagProcessor;
+
+    private VisionPortal tagsVisionPortal;
+
+    boolean findTag = false;
 
     // Calculate the COUNTS_PER_INCH for your specific drive train.
     // Go to your motor vendor website to determine your motor's COUNTS_PER_MOTOR_REV
@@ -282,7 +292,7 @@ public class CenterStageAutonomous extends LinearOpMode {
         setupRobot();
         // Wait for the game to start (Display Gyro value while waiting)
         propDetector = new FirstVisionProcessor();
-        visionPortal = VisionPortal.easyCreateWithDefaults(hardwareMap.get(WebcamName.class, "Webcam 1"), propDetector);
+        propVisionPortal = VisionPortal.easyCreateWithDefaults(hardwareMap.get(WebcamName.class, "Webcam 1"), propDetector);
         while (opModeInInit()) {
             //telemetry.addData("", "Robot Heading = %4.0f", getRawHeading());
             telemetry.addData("bot heading:", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
@@ -337,7 +347,7 @@ public class CenterStageAutonomous extends LinearOpMode {
         rightDriveB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         resetHeading();
 
-        visionPortal.stopStreaming();
+        propVisionPortal.stopStreaming();
 
         runAutonomousProgram(isFar, parkOnly, trianglePark);
 
@@ -372,6 +382,20 @@ public class CenterStageAutonomous extends LinearOpMode {
 //                driveStraight(DRIVE_SPEED, -48, 0, false);
 //            }
 //        }
+        propVisionPortal.close();
+
+        tagProcessor = new AprilTagProcessor.Builder()
+            .setDrawAxes(true)
+            .setDrawCubeProjection(true)
+            .setDrawTagID(true)
+            .setDrawTagOutline(true)
+            .build();
+
+        tagsVisionPortal = new VisionPortal.Builder()
+                .addProcessor(tagProcessor)
+                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
+                .setCameraResolution(new Size(640, 480))
+                .build();
 
         //move up to spike marks
         double distance = -20.0;
@@ -427,10 +451,91 @@ public class CenterStageAutonomous extends LinearOpMode {
         driveStraight(DRIVE_SPEED, distance, 90.0, isMirrored);
 
         if (!parkOnly) {
-            turnToHeading(TURN_SPEED, 0.0, notMirrored);
-            driveStraight(DRIVE_SPEED/2, -40.0, 0.0, notMirrored);
-            turnToHeading(TURN_SPEED, 90.0, isMirrored);
-            swingArm.setPosition(armDelivery);
+            if (isRed) {
+                while (!findTag) {
+                    startStrafe("right", 0.075);
+                    if (tagProcessor.getDetections().size() > 0) {
+                        AprilTagDetection tag = tagProcessor.getDetections().get(0);
+
+                        telemetry.addData("ID", tag.id);
+
+                        telemetry.addLine(String.format("XYZ %6.2f %6.2f %6.2f", tag.ftcPose.x, tag.ftcPose.y, tag.ftcPose.z));
+
+                        telemetry.addLine(String.format("RPY %6.2f %6.2f %6.2f", tag.ftcPose.roll, tag.ftcPose.pitch, tag.ftcPose.yaw ));
+
+                        telemetry.update();
+
+                        startStrafe("right", 0.075);
+
+                        switch (selected) {
+                            case LEFT:
+                                if (tag.id == 4 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) { //>= 0?
+                                    stopStrafe();
+                                    findTag = true;
+                                }
+                            case MIDDLE:
+                                if (tag.id == 5 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
+                                    stopStrafe();
+                                    findTag = true;
+                                }
+                            case RIGHT:
+                                if (tag.id == 6 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
+                                    stopStrafe();
+                                    findTag = true;
+                                }
+                            case NONE:
+                                if (tag.id == 5 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
+                                    stopStrafe();
+                                    findTag = true;
+                                }
+                        }
+                    }
+                }
+            } else { //must be blue
+                while (!findTag) {
+                    startStrafe("left", 0.075);
+                    if (tagProcessor.getDetections().size() > 0) {
+                        AprilTagDetection tag = tagProcessor.getDetections().get(0);
+
+                        telemetry.addData("ID", tag.id);
+
+                        telemetry.addLine(String.format("XYZ %6.2f %6.2f %6.2f", tag.ftcPose.x, tag.ftcPose.y, tag.ftcPose.z));
+
+                        telemetry.addLine(String.format("RPY %6.2f %6.2f %6.2f", tag.ftcPose.roll, tag.ftcPose.pitch, tag.ftcPose.yaw));
+
+                        telemetry.update();
+
+                        startStrafe("left", 0.075);
+
+                        switch (selected) {
+                            case LEFT:
+                                if (tag.id == 1 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) { //<= 0?
+                                    stopStrafe();
+                                    findTag = true;
+                                }
+                            case MIDDLE:
+                                if (tag.id == 2 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
+                                    stopStrafe();
+                                    findTag = true;
+                                }
+                            case RIGHT:
+                                if (tag.id == 3 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
+                                    stopStrafe();
+                                    findTag = true;
+                                }
+                            case NONE:
+                                if (tag.id == 2 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
+                                    stopStrafe();
+                                    findTag = true;
+                                }
+                        }
+                    }
+                }
+            }
+//            turnToHeading(TURN_SPEED, 0.0, notMirrored);
+//            driveStraight(DRIVE_SPEED/2, -40.0, 0.0, notMirrored);
+//            turnToHeading(TURN_SPEED, 90.0, isMirrored);
+//            swingArm.setPosition(armCarry);
 //            swingArm.setPosition(armDrivePos);
 //            if (trianglePark) {
 //                turnToHeading(TURN_SPEED, 0.0, notMirrored);
@@ -566,6 +671,37 @@ public class CenterStageAutonomous extends LinearOpMode {
             rightDriveF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             rightDriveB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
+    }
+
+    /**
+     * Method to start strafe for april tag detection
+     * @param direction direction to strafe string ("left" or "right")
+     */
+    public void startStrafe(String direction, double strafeSpeed) {
+        Range.clip(strafeSpeed, 0, 1.0);
+        if (direction == "left") {
+            leftDriveF.setPower(-strafeSpeed);
+            leftDriveB.setPower(strafeSpeed);
+            rightDriveF.setPower(strafeSpeed);
+            rightDriveB.setPower(-strafeSpeed);
+        } else { //direction must be right
+            leftDriveF.setPower(strafeSpeed);
+            leftDriveB.setPower(-strafeSpeed);
+            rightDriveF.setPower(-strafeSpeed);
+            rightDriveB.setPower(strafeSpeed);
+        }
+        clearBulkCache();
+    }
+
+    /**
+     * Method to stop strafe (and all motor movement)
+     */
+    public void stopStrafe() {
+        leftDriveF.setPower(0);
+        leftDriveB.setPower(0);
+        rightDriveF.setPower(0);
+        rightDriveB.setPower(0);
+        clearBulkCache();
     }
 
     /**
