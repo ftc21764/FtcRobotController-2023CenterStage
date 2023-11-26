@@ -93,8 +93,9 @@ public class CenterStageTeleOp extends LinearOpMode {
         Intake intake = new Intake(hardwareMap, telemetry, gamepad1);
 
         SwingArm swingArm = new SwingArm(hardwareMap, telemetry, gamepad2, false);
-        ServoController board = new ServoController();
-        board.init(hardwareMap);
+        ContinousServo deliveryServo = new ContinousServo(hardwareMap, telemetry);
+
+        double deliverySpeed = 0.5;
 
         // Initialize the IMU (Inertia Measurement Unit), used to detect the orientation of the robot
         // for Field-Oriented driving
@@ -138,6 +139,7 @@ public class CenterStageTeleOp extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.addData("front left counts:", frontLeftDrive.getCurrentPosition());
         swingArm.initLoop();
+        deliveryServo.init();
         telemetry.update();
 
         waitForStart();
@@ -149,11 +151,9 @@ public class CenterStageTeleOp extends LinearOpMode {
             intake.loop();
             swingArm.loop();
             if (gamepad2.left_trigger > 0) {
-                board.setServoPosition(2.0);
+                deliveryServo.rotateDelivery(-deliverySpeed, 120);
             } else if (gamepad2.right_trigger > 0) {
-                board.setServoPosition(0.0);
-            } else {
-                board.setServoPosition(1.0);
+                deliveryServo.rotateDelivery(deliverySpeed, 120);
             }
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.

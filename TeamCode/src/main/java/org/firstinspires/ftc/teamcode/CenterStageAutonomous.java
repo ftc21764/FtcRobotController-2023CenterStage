@@ -406,14 +406,15 @@ public class CenterStageAutonomous extends LinearOpMode {
             selected = selectionOverride;
         }
         //push to corresponding spike mark
+
         switch (selected) {
             case LEFT:
-                driveStraight(DRIVE_SPEED/2, (distance + 5), 180.0, notMirrored);
-                turnToHeading(TURN_SPEED/2, 35.0, notMirrored);
-                driveStraight(DRIVE_SPEED/2, -27.0, 35.0, notMirrored);
-                driveStraight(DRIVE_SPEED/2, 33.0, 35.0, notMirrored);
+                driveStraight(DRIVE_SPEED/2, (distance - 15), 180.0, notMirrored);
+                turnToHeading(TURN_SPEED/2, 45.0, notMirrored);
+                driveStraight(DRIVE_SPEED/2, -20.0, 45.0, notMirrored);
+                driveStraight(DRIVE_SPEED/2, 20.0, 45.0, notMirrored);
                 turnToHeading(TURN_SPEED/2, 0.0, notMirrored);
-                driveStraight(DRIVE_SPEED/2, 10.0, 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED/2, -(distance - 5), 0.0, notMirrored);
                 break;
             case MIDDLE:
                 distance -= 29;
@@ -422,12 +423,12 @@ public class CenterStageAutonomous extends LinearOpMode {
                 driveStraight(DRIVE_SPEED, (-distance - 5.0), 0.0, notMirrored);
                 break;
             case RIGHT:
-                driveStraight(DRIVE_SPEED/2, (distance + 5), 180.0, notMirrored);
-                turnToHeading(TURN_SPEED/2, -35.0, notMirrored);
-                driveStraight(DRIVE_SPEED/2, -27.0, -35.0, notMirrored);
-                driveStraight(DRIVE_SPEED/2, 33.0, -35.0, notMirrored);
+                driveStraight(DRIVE_SPEED/2, (distance - 15), 180.0, notMirrored);
+                turnToHeading(TURN_SPEED/2, -45.0, notMirrored);
+                driveStraight(DRIVE_SPEED/2, -20.0, -45.0, notMirrored);
+                driveStraight(DRIVE_SPEED/2, 20.0, -45.0, notMirrored);
                 turnToHeading(TURN_SPEED/2, 0.0, notMirrored);
-                driveStraight(DRIVE_SPEED/2, 10.0, 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED/2, -(distance - 5), 0.0, notMirrored);
                 break;
             case NONE:
                 distance -= 29;
@@ -453,7 +454,7 @@ public class CenterStageAutonomous extends LinearOpMode {
         if (!parkOnly) {
             if (isRed) {
                 while (!findTag) {
-                    startStrafe("right", 0.075);
+                    startStrafe("right", 0.0375);
                     if (tagProcessor.getDetections().size() > 0) {
                         AprilTagDetection tag = tagProcessor.getDetections().get(0);
 
@@ -465,7 +466,7 @@ public class CenterStageAutonomous extends LinearOpMode {
 
                         telemetry.update();
 
-                        startStrafe("right", 0.075);
+                        startStrafe("right", 0.0375);
 
                         switch (selected) {
                             case LEFT:
@@ -493,7 +494,7 @@ public class CenterStageAutonomous extends LinearOpMode {
                 }
             } else { //must be blue
                 while (!findTag) {
-                    startStrafe("left", 0.075);
+                    startStrafe("left", 0.0375);
                     if (tagProcessor.getDetections().size() > 0) {
                         AprilTagDetection tag = tagProcessor.getDetections().get(0);
 
@@ -505,7 +506,7 @@ public class CenterStageAutonomous extends LinearOpMode {
 
                         telemetry.update();
 
-                        startStrafe("left", 0.075);
+                        startStrafe("left", 0.0375);
 
                         switch (selected) {
                             case LEFT:
@@ -678,19 +679,21 @@ public class CenterStageAutonomous extends LinearOpMode {
      * @param direction direction to strafe string ("left" or "right")
      */
     public void startStrafe(String direction, double strafeSpeed) {
-        Range.clip(strafeSpeed, 0, 1.0);
-        if (direction == "left") {
-            leftDriveF.setPower(-strafeSpeed);
-            leftDriveB.setPower(strafeSpeed);
-            rightDriveF.setPower(strafeSpeed);
-            rightDriveB.setPower(-strafeSpeed);
-        } else { //direction must be right
-            leftDriveF.setPower(strafeSpeed);
-            leftDriveB.setPower(-strafeSpeed);
-            rightDriveF.setPower(-strafeSpeed);
-            rightDriveB.setPower(strafeSpeed);
+        if (opModeIsActive()) {
+            Range.clip(strafeSpeed, 0, 1.0);
+            if (direction == "left") {
+                leftDriveF.setPower(-strafeSpeed);
+                leftDriveB.setPower(strafeSpeed);
+                rightDriveF.setPower(strafeSpeed);
+                rightDriveB.setPower(-strafeSpeed);
+            } else { //direction must be right
+                leftDriveF.setPower(strafeSpeed);
+                leftDriveB.setPower(-strafeSpeed);
+                rightDriveF.setPower(-strafeSpeed);
+                rightDriveB.setPower(strafeSpeed);
+            }
+            clearBulkCache();
         }
-        clearBulkCache();
     }
 
     /**
