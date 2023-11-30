@@ -144,6 +144,7 @@ public class CenterStageAutonomous extends LinearOpMode {
     int armCarry = 2;
     int armDelivery = 3;
     int armDrivePos = 4;
+    int driveStraightLoops = 0;
 
 
     //String allianceColor = "blue";
@@ -636,11 +637,13 @@ public class CenterStageAutonomous extends LinearOpMode {
             // Start driving straight, and then enter the control loop
             maxDriveSpeed = Math.abs(maxDriveSpeed);
             moveRobot(maxDriveSpeed, 0);
+            driveStraightLoops += 1;
 
             // keep looping while we are still active, and BOTH motors are running.
             while (opModeIsActive()) {
 
                 telemetry.addData("driveStraight", "opModeIsActive and all motors are busy!");
+                telemetry.addData("drive straight loops: ", driveStraightLoops);
 
                 // Determine required steering to keep on heading
                 turnSpeed = getSteeringCorrection(heading, P_DRIVE_GAIN);
@@ -876,6 +879,9 @@ public class CenterStageAutonomous extends LinearOpMode {
         telemetry.addData("Angle Target:Current", "%5.2f:%5.0f", targetHeading, robotHeading);
         telemetry.addData("Error:Steer", "%5.1f:%5.1f", headingError, turnSpeed);
         telemetry.addData("Wheel Speeds L:R.", "%5.2f : %5.2f", leftSpeed, rightSpeed);
+
+        telemetry.addData("drive straight loops: ", driveStraightLoops);
+        telemetry.addData("current driveSpeed value: ", driveSpeed);
 
         //checks the time spent on the loop and adds it to telemetry
 
