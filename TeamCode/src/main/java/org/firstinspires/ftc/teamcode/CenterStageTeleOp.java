@@ -93,9 +93,12 @@ public class CenterStageTeleOp extends LinearOpMode {
         Intake intake = new Intake(hardwareMap, telemetry, gamepad1);
 
         SwingArm swingArm = new SwingArm(hardwareMap, telemetry, gamepad2, false);
-        ContinousServo deliveryServo = new ContinousServo(hardwareMap, telemetry);
+        ServoController board = new ServoController();
+        ElapsedTime rotationTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+        int rotationTime = 603;
+        //ContinousServo deliveryServo = new ContinousServo(hardwareMap, telemetry);
 
-        double deliverySpeed = 0.5;
+        //double deliverySpeed = 0;
 
         // Initialize the IMU (Inertia Measurement Unit), used to detect the orientation of the robot
         // for Field-Oriented driving
@@ -139,7 +142,9 @@ public class CenterStageTeleOp extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.addData("front left counts:", frontLeftDrive.getCurrentPosition());
         swingArm.initLoop();
-        deliveryServo.init();
+//        deliveryServo.init();
+//        deliveryServo.deliveryServo.resetDeviceConfigurationForOpMode();
+        board.init(hardwareMap);
         telemetry.update();
 
         waitForStart();
@@ -150,11 +155,27 @@ public class CenterStageTeleOp extends LinearOpMode {
             double max;
             intake.loop();
             swingArm.loop();
+            rotationTimer.reset();
             if (gamepad2.left_trigger > 0) {
-                deliveryServo.rotateDelivery(-deliverySpeed, 120);
+                while (rotationTimer.time() < rotationTime) {
+                    board.setServoPosition(0);
+                }
             } else if (gamepad2.right_trigger > 0) {
-                deliveryServo.rotateDelivery(deliverySpeed, 120);
+                while (rotationTimer.time() < rotationTime) {
+                    board.setServoPosition(1);
+                }
+            } else {
+                board.setServoPosition(0.5);
             }
+//            if (gamepad2.left_trigger > 0) {
+////                deliveryServo.rotateDelivery(-deliverySpeed, 120);
+//                deliveryServo.rotateDelivery(0.75, 120);
+//            } else if (gamepad2.right_trigger > 0) {
+//                //deliveryServo.rotateDelivery(-deliverySpeed, 120);
+//                deliveryServo.rotateDelivery(0.25, 120);
+//            } else {
+//                deliveryServo.rotateDelivery(0.5, 120);
+//            }
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
 

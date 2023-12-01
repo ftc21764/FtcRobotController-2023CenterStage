@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 
@@ -23,11 +24,12 @@ public class ContinousServo {
     public ContinousServo (HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
         this.hardwareMap = hardwareMap;
-        deliveryServo = hardwareMap.get(CRServo.class, "servo");
+        deliveryServo = hardwareMap.crservo.get("servo");
     }
 
     public void init () {
-        deliveryServo.setDirection(FORWARD);
+        deliveryServo.resetDeviceConfigurationForOpMode();
+        //deliveryServo.setDirection(FORWARD);
     }
 
     public void rotateDelivery (double power, double rotationDegrees) {
@@ -36,7 +38,9 @@ public class ContinousServo {
 //            Range.clip(power, -1.0, 1.0);
 //            timeToRotateAngle = timeToRotateAngle / power;
             deliveryServo.setPower(power);
-            telemetry.addData("SERVO POWER", power);
+            telemetry.addData("TARGET SERVO POWER", power);
+            telemetry.addData("ACTUAL SERVO POWER", deliveryServo.getPower());
+            telemetry.addData("CONTROLLER:", deliveryServo.getController());
 //            try {
 //                deliveryServo.wait((long)timeToRotateAngle);
 //            } catch (InterruptedException e) {
