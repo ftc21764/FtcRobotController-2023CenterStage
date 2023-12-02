@@ -44,7 +44,7 @@ public class FirstVisionProcessor implements VisionProcessor {
             return Selected.RIGHT;
         }
 
-        // threshold at some pooint?
+        // threshold at some point?
     }
 
     protected double getAvgSaturation(Mat input, Rect rect) {

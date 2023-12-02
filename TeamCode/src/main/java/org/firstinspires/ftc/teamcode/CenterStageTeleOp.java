@@ -29,8 +29,6 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.hardware.bosch.BHI260IMU;
-import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -93,9 +91,11 @@ public class CenterStageTeleOp extends LinearOpMode {
         Intake intake = new Intake(hardwareMap, telemetry, gamepad1);
 
         SwingArm swingArm = new SwingArm(hardwareMap, telemetry, gamepad2, false);
-        ServoController board = new ServoController();
+        DeliveryServoController deliveryBoard = new DeliveryServoController();
+        DroneLauncherServoController launcherBoard = new DroneLauncherServoController();
         ElapsedTime rotationTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         int rotationTime = 603;
+        int deliveryTurnCounts = 0;
         //ContinousServo deliveryServo = new ContinousServo(hardwareMap, telemetry);
 
         //double deliverySpeed = 0;
@@ -144,7 +144,8 @@ public class CenterStageTeleOp extends LinearOpMode {
         swingArm.initLoop();
 //        deliveryServo.init();
 //        deliveryServo.deliveryServo.resetDeviceConfigurationForOpMode();
-        board.init(hardwareMap);
+        deliveryBoard.init(hardwareMap);
+        launcherBoard.init(hardwareMap);
         telemetry.update();
 
         waitForStart();
@@ -156,17 +157,30 @@ public class CenterStageTeleOp extends LinearOpMode {
             intake.loop();
             swingArm.loop();
             rotationTimer.reset();
+
+            //servo stuff - always zero-ed angular servo that acts as continuous for delivery. there's a limit on how many slots in each direction you can turn.
             if (gamepad2.left_trigger > 0) {
-                while (rotationTimer.time() < rotationTime) {
-                    board.setServoPosition(0);
+                if (deliveryTurnCounts < 2) {
+                    while (rotationTimer.time() < rotationTime) {
+                        deliveryBoard.setServoPosition(0);
+                    }
+                    deliveryTurnCounts += 1;
                 }
             } else if (gamepad2.right_trigger > 0) {
-                while (rotationTimer.time() < rotationTime) {
-                    board.setServoPosition(1);
+                if (deliveryTurnCounts > 0) {
+                    while (rotationTimer.time() < rotationTime) {
+                        deliveryBoard.setServoPosition(1);
+                    }
+                deliveryTurnCounts -= 1;
                 }
             } else {
-                board.setServoPosition(0.5);
+                deliveryBoard.setServoPosition(0.5); //at a stop
             }
+
+            if (gamepad2.dpad_up) {
+                launcherBoard.setServoPosition(0.5);
+            }
+
 //            if (gamepad2.left_trigger > 0) {
 ////                deliveryServo.rotateDelivery(-deliverySpeed, 120);
 //                deliveryServo.rotateDelivery(0.75, 120);
@@ -228,10 +242,10 @@ public class CenterStageTeleOp extends LinearOpMode {
             }
 
             // Send calculated power to wheels
-            frontLeftDrive.setPower(leftFrontPower/2);
-            frontRightDrive.setPower(rightFrontPower/2);
-            backLeftDrive.setPower(leftBackPower/2);
-            backRightDrive.setPower(rightBackPower/2);
+            frontLeftDrive.setPower(leftFrontPower * 0.75);
+            frontRightDrive.setPower(rightFrontPower * 0.75);
+            backLeftDrive.setPower(leftBackPower * 0.75);
+            backRightDrive.setPower(rightBackPower * 0.75);
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime);

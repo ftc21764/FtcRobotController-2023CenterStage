@@ -119,6 +119,8 @@ public class CenterStageAutonomous extends LinearOpMode {
     private double headingOffset = 0;
     private double headingError = 0;
 
+
+
     // These variable are declared here (as class members) so they can be updated in various methods,
     // but still be displayed by sendTelemetry()
     private double targetHeading = 0;
@@ -161,6 +163,8 @@ public class CenterStageAutonomous extends LinearOpMode {
 
     boolean findTag = false;
 
+    double strafeSpeed = 0.0375;
+
     // Calculate the COUNTS_PER_INCH for your specific drive train.
     // Go to your motor vendor website to determine your motor's COUNTS_PER_MOTOR_REV
     // For external drive gearing, set DRIVE_GEAR_REDUCTION as needed.
@@ -190,7 +194,8 @@ public class CenterStageAutonomous extends LinearOpMode {
     // These constants define the desired driving/control characteristics
     // They can/should be tweaked to suit the specific robot drive train.
     static final double DRIVE_SPEED = 0.2;     // Max driving speed for better distance accuracy.
-    static final double TURN_SPEED = 0.4;     // Max Turn speed to limit turn rate
+    static final double SLOW_DRIVE_SPEED = 0.1;
+    static final double TURN_SPEED = 0.2;     // Max Turn speed to limit turn rate
     static final double HEADING_THRESHOLD = 4.0;    // How close must the heading get to the target before moving to next step.
     // Requiring more accuracy (a smaller number) will often make the turn take longer to get into the final position.
     // Define the Proportional control coefficient (or GAIN) for "heading control".
@@ -334,8 +339,8 @@ public class CenterStageAutonomous extends LinearOpMode {
                 telemetry.addData("OVERRIDE:", selectionOverride);
             }
 
-            parkOnly = false; // add gamepad input later
-            trianglePark = false; // add gamepad input later
+            parkOnly = true; // add gamepad input later
+            trianglePark = true; // add gamepad input later
 
             telemetry.addData("isRed:", isRed);
             telemetry.addData("isFar:", isFar);
@@ -399,7 +404,9 @@ public class CenterStageAutonomous extends LinearOpMode {
                 .build();
 
         //move up to spike marks
-        double distance = -20.0;
+        double distance = -18.0;
+        double distanceToTravel;
+        distanceToTravel = distance;
 
         FirstVisionProcessor.Selected selected = propDetector.selection;
 
@@ -410,52 +417,68 @@ public class CenterStageAutonomous extends LinearOpMode {
 
         switch (selected) {
             case LEFT:
-                driveStraight(DRIVE_SPEED/2, (distance - 15), 180.0, notMirrored);
-                turnToHeading(TURN_SPEED/2, 45.0, notMirrored);
-                driveStraight(DRIVE_SPEED/2, -20.0, 45.0, notMirrored);
-                driveStraight(DRIVE_SPEED/2, 20.0, 45.0, notMirrored);
-                turnToHeading(TURN_SPEED/2, 0.0, notMirrored);
-                driveStraight(DRIVE_SPEED/2, -(distance - 5), 0.0, notMirrored);
+                distance -= 7;
+                driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
+                driveStraight(SLOW_DRIVE_SPEED, -2.0, 0.0, notMirrored);
+                turnToHeading(TURN_SPEED, 45.0, notMirrored);
+                driveStraight(DRIVE_SPEED, -14.0, 45.0, notMirrored);
+                driveStraight(DRIVE_SPEED, 14.0, 45.0, notMirrored);
+                turnToHeading(TURN_SPEED, 0.0, notMirrored);
+                distance = (distance * -1) - 3;
+                driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
                 break;
             case MIDDLE:
                 distance -= 29;
                 driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
                 //driveStraight(DRIVE_SPEED, (-distance + 10.0), 0.0, notMirrored);
-                driveStraight(DRIVE_SPEED, (-distance - 5.0), 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED, (-distance - 3.0), 0.0, notMirrored);
                 break;
             case RIGHT:
-                driveStraight(DRIVE_SPEED/2, (distance - 15), 180.0, notMirrored);
-                turnToHeading(TURN_SPEED/2, -45.0, notMirrored);
-                driveStraight(DRIVE_SPEED/2, -20.0, -45.0, notMirrored);
-                driveStraight(DRIVE_SPEED/2, 20.0, -45.0, notMirrored);
-                turnToHeading(TURN_SPEED/2, 0.0, notMirrored);
-                driveStraight(DRIVE_SPEED/2, -(distance - 5), 0.0, notMirrored);
+                distance -= 7;
+                driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
+                driveStraight(SLOW_DRIVE_SPEED, -2.0, 0.0, notMirrored);
+                turnToHeading(TURN_SPEED, -45.0, notMirrored);
+                driveStraight(DRIVE_SPEED, -14.0, -45.0, notMirrored);
+                driveStraight(DRIVE_SPEED, 14.0, -45.0, notMirrored);
+                turnToHeading(TURN_SPEED, 0.0, notMirrored);
+                distance = (distance * -1) - 3;
+                driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
                 break;
             case NONE:
                 distance -= 29;
                 driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
                 //driveStraight(DRIVE_SPEED, (-distance + 10.0), 0.0, notMirrored);
-                driveStraight(DRIVE_SPEED, (-distance - 5.0), 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED, (-distance - 3.0), 0.0, notMirrored);
                 break;
         }
 
         turnToHeading(TURN_SPEED, 90.0, isMirrored);
 
-        distance = -42;
+        distance = -48;
 
         if (isFar) {
             distance -= 84;
         }
         if (parkOnly) {
-            distance -= 32; //used to be 12
+            if (!trianglePark) {
+                distance -= 26; //used to be 12
+            }
         }
 
-        driveStraight(DRIVE_SPEED, distance, 90.0, isMirrored);
+        //driveStraight(DRIVE_SPEED, distance, 90.0, isMirrored);
 
-        if (!parkOnly) {
+        if (!parkOnly) { //with april tags and scoring
+            if (trianglePark) {
+                distance = -32.0;
+            } else {
+                distance = 32.0;
+            }
+            ElapsedTime strafeTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+            int strafeTime = 6;
+            strafeTimer.reset();
             if (isRed) {
-                while (!findTag) {
-                    startStrafe("right", 0.0375);
+                while (!findTag && strafeTimer.time() <= strafeTime) {
+                    startStrafe("right", strafeSpeed);
                     if (tagProcessor.getDetections().size() > 0) {
                         AprilTagDetection tag = tagProcessor.getDetections().get(0);
 
@@ -465,37 +488,45 @@ public class CenterStageAutonomous extends LinearOpMode {
 
                         telemetry.addLine(String.format("RPY %6.2f %6.2f %6.2f", tag.ftcPose.roll, tag.ftcPose.pitch, tag.ftcPose.yaw ));
 
+                        telemetry.addData("STRAFE TIME ELAPSED: ", strafeTimer.time());
+
                         telemetry.update();
 
-                        startStrafe("right", 0.0375);
+                        startStrafe("right", strafeSpeed);
 
                         switch (selected) {
                             case LEFT:
                                 if (tag.id == 4 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) { //>= 0?
                                     stopStrafe();
+                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
+                                    distance -= 6;
                                     findTag = true;
                                 }
                             case MIDDLE:
                                 if (tag.id == 5 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
                                     stopStrafe();
+                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
                                     findTag = true;
                                 }
                             case RIGHT:
                                 if (tag.id == 6 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
                                     stopStrafe();
+                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
+                                    distance += 6;
                                     findTag = true;
                                 }
                             case NONE:
                                 if (tag.id == 5 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
                                     stopStrafe();
+                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
                                     findTag = true;
                                 }
                         }
                     }
                 }
-            } else { //must be blue
-                while (!findTag) {
-                    startStrafe("left", 0.0375);
+            } else { //else it must be blue
+                while (!findTag && strafeTimer.time() <= strafeTime) {
+                    startStrafe("left", strafeSpeed);
                     if (tagProcessor.getDetections().size() > 0) {
                         AprilTagDetection tag = tagProcessor.getDetections().get(0);
 
@@ -505,55 +536,58 @@ public class CenterStageAutonomous extends LinearOpMode {
 
                         telemetry.addLine(String.format("RPY %6.2f %6.2f %6.2f", tag.ftcPose.roll, tag.ftcPose.pitch, tag.ftcPose.yaw));
 
+                        telemetry.addData("STRAFE TIME ELAPSED: ", strafeTimer.time());
+
                         telemetry.update();
 
-                        startStrafe("left", 0.0375);
+                        startStrafe("left", strafeSpeed);
 
                         switch (selected) {
                             case LEFT:
                                 if (tag.id == 1 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) { //<= 0?
                                     stopStrafe();
+                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
+                                    distance -= 6;
                                     findTag = true;
                                 }
                             case MIDDLE:
                                 if (tag.id == 2 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
                                     stopStrafe();
+                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
                                     findTag = true;
                                 }
                             case RIGHT:
                                 if (tag.id == 3 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
                                     stopStrafe();
+                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
+                                    distance += 6;
                                     findTag = true;
                                 }
                             case NONE:
                                 if (tag.id == 2 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
                                     stopStrafe();
+                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
                                     findTag = true;
                                 }
                         }
                     }
                 }
             }
-//            turnToHeading(TURN_SPEED, 0.0, notMirrored);
-//            driveStraight(DRIVE_SPEED/2, -40.0, 0.0, notMirrored);
-//            turnToHeading(TURN_SPEED, 90.0, isMirrored);
-//            swingArm.setPosition(armCarry);
-//            swingArm.setPosition(armDrivePos);
-//            if (trianglePark) {
-//                turnToHeading(TURN_SPEED, 0.0, notMirrored);
-//                driveStraight(DRIVE_SPEED/2, -32.0, 0.0, notMirrored);
-//                turnToHeading(TURN_SPEED, 90.0, isMirrored);
-//                driveStraight(DRIVE_SPEED/2, -36.0, 90.0, isMirrored);
-//            } else {
-//                turnToHeading(TURN_SPEED, 0.0, notMirrored);
-//                driveStraight(DRIVE_SPEED/2, 32.0, 0.0, notMirrored);
-//                turnToHeading(TURN_SPEED, 90.0, isMirrored);
-//                driveStraight(DRIVE_SPEED/2, -36.0, 90.0, isMirrored);
-//            }
         }
 
-        //april tags or alt parking
-        //turnToHeading(TURN_SPEED, 0.0, notMirrored);
+        if (parkOnly) {
+            driveStraight(DRIVE_SPEED, distance, 90.0, isMirrored);
+            if (trianglePark) {
+                turnToHeading(TURN_SPEED, 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED, -74.0, 0.0, notMirrored);
+                turnToHeading(TURN_SPEED, 90.0, isMirrored);
+                driveStraight(DRIVE_SPEED, -36.0, 90.0, isMirrored);
+            }
+        } else {
+            driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
+            turnToHeading(TURN_SPEED, 90.0, isMirrored);
+            driveStraight(DRIVE_SPEED, -36.0, 90.0, isMirrored);
+        }
 
         swingArm.setPosition(armHardStop);
         telemetry.addData( "SwingArmPosition", swingArm.armMotor.getCurrentPosition());

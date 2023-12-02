@@ -8,9 +8,11 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name="ServoTest", group="Robot")
 public class ServoTest extends OpMode {
-    ServoController board = new ServoController();
+    DeliveryServoController board = new DeliveryServoController();
     ElapsedTime rotationTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     int rotationTime = 603;
+
+
 
     @Override
     public void init() {
@@ -19,19 +21,43 @@ public class ServoTest extends OpMode {
 
     @Override
     public void loop() {
-        rotationTimer.reset();
-        if (gamepad2.a) {
-            while (rotationTimer.time() < rotationTime) {
-                board.setServoPosition(0);
-            }
-        } else if (gamepad2.b) {
-            while (rotationTimer.time() < rotationTime) {
-                board.setServoPosition(1);
-            }
-        } else {
+//        DRONE LAUNCHER SERVO
+        if (gamepad2.dpad_up) {
             board.setServoPosition(0.5);
         }
+
+
+
+//        DELIVERY SERVO
+//        rotationTimer.reset();
+//        if (gamepad2.a) {
+//            while (rotationTimer.time() < rotationTime) {
+//                board.setServoPosition(0);
+//            }
+//        } else if (gamepad2.b) {
+//            while (rotationTimer.time() < rotationTime) {
+//                board.setServoPosition(1);
+//            }
+//        } else {
+//            board.setServoPosition(0.5);
+//        }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //    @Override
 //    public void loop() {
