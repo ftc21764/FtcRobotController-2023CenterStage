@@ -97,6 +97,8 @@ public class CenterStageTeleOp extends LinearOpMode {
         int rotationTime = 603;
         int deliveryTurnCounts = 0;
         //ContinousServo deliveryServo = new ContinousServo(hardwareMap, telemetry);
+        //boolean slowMode = false;
+        double speedMultiplier = 0.75;
 
         //double deliverySpeed = 0;
 
@@ -140,12 +142,12 @@ public class CenterStageTeleOp extends LinearOpMode {
 
         // Wait for the game to start (driver presses PLAY)
         telemetry.addData("Status", "Initialized");
-        telemetry.addData("front left counts:", frontLeftDrive.getCurrentPosition());
+        //telemetry.addData("front left counts:", frontLeftDrive.getCurrentPosition());
         swingArm.initLoop();
 //        deliveryServo.init();
 //        deliveryServo.deliveryServo.resetDeviceConfigurationForOpMode();
         deliveryBoard.init(hardwareMap);
-        launcherBoard.init(hardwareMap);
+        launcherBoard.init(hardwareMap, "launcherServo");
         telemetry.update();
 
         waitForStart();
@@ -177,9 +179,33 @@ public class CenterStageTeleOp extends LinearOpMode {
                 deliveryBoard.setServoPosition(0.5); //at a stop
             }
 
-            if (gamepad2.dpad_up) {
-                launcherBoard.setServoPosition(0.5);
+
+//            if (gamepad1.a) {
+//                if (slowMode) {
+//                    slowMode = false;
+//                } else {
+//                    slowMode = true;
+//                }
+//            }
+//
+//            if (slowMode) {
+//                speedMultiplier = 0.5;
+//            } else {
+//                speedMultiplier = 0.75;
+//            }
+            if (gamepad1.right_bumper) {
+                speedMultiplier = 0.25;
+            } else {
+                speedMultiplier = 0.65;
             }
+
+            if (gamepad1.start) {
+                imu.resetYaw();
+            }
+
+//            if (gamepad2.dpad_up) {
+//                launcherBoard.setServoPosition(0.5);
+//            }
 
 //            if (gamepad2.left_trigger > 0) {
 ////                deliveryServo.rotateDelivery(-deliverySpeed, 120);
@@ -206,7 +232,7 @@ public class CenterStageTeleOp extends LinearOpMode {
             double rotX = x * Math.cos(botHeading) + y * Math.sin(botHeading);
             double rotY = -x * Math.sin(botHeading) + y * Math.cos(botHeading); //-x * Math.sin(botHeading) + y * Math.cos(botHeading);
             telemetry.addData("heading radians:", botHeading);
-            telemetry.addData("front left counts:", frontLeftDrive.getCurrentPosition());
+            //telemetry.addData("front left counts:", frontLeftDrive.getCurrentPosition());
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
@@ -228,6 +254,11 @@ public class CenterStageTeleOp extends LinearOpMode {
                 rightBackPower /= max;
             }
 
+            leftFrontPower *= speedMultiplier;
+            rightFrontPower *= speedMultiplier;
+            leftBackPower *= speedMultiplier;
+            rightBackPower *= speedMultiplier;
+
             // Hold the left bumper and the corresponding button to run test code.
             // Each button should make the corresponding motor run FORWARD.
             //   1) First get all the motors to take to correct positions on the robot
@@ -242,16 +273,17 @@ public class CenterStageTeleOp extends LinearOpMode {
             }
 
             // Send calculated power to wheels
-            frontLeftDrive.setPower(leftFrontPower * 0.75);
-            frontRightDrive.setPower(rightFrontPower * 0.75);
-            backLeftDrive.setPower(leftBackPower * 0.75);
-            backRightDrive.setPower(rightBackPower * 0.75);
+            frontLeftDrive.setPower(leftFrontPower);
+            frontRightDrive.setPower(rightFrontPower);
+            backLeftDrive.setPower(leftBackPower);
+            backRightDrive.setPower(rightBackPower);
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime);
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
             telemetry.addLine("LB + A/B/X/Y to test single motors");
+            telemetry.addData("SPEED:", speedMultiplier);
             telemetry.update();
         }
     }

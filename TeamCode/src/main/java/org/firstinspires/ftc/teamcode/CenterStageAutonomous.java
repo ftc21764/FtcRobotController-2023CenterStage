@@ -120,7 +120,6 @@ public class CenterStageAutonomous extends LinearOpMode {
     private double headingError = 0;
 
 
-
     // These variable are declared here (as class members) so they can be updated in various methods,
     // but still be displayed by sendTelemetry()
     private double targetHeading = 0;
@@ -140,6 +139,7 @@ public class CenterStageAutonomous extends LinearOpMode {
     boolean isFar = true;
     boolean parkOnly = true;
     boolean trianglePark = false;
+    boolean stalling = false; //cap
 
     int armHardStop = 0;
     int armPickUp = 1;
@@ -289,7 +289,7 @@ public class CenterStageAutonomous extends LinearOpMode {
 
     protected void mechanismLoop() {
         //linearSlide.loop();
-        //intake.loop();
+        intake.loop();
         swingArm.loop();
     }
 
@@ -309,42 +309,138 @@ public class CenterStageAutonomous extends LinearOpMode {
             telemetry.addData("right front starting:", rightDriveF.getCurrentPosition());
             telemetry.addData("right back starting:", rightDriveB.getCurrentPosition());
 
-            telemetry.addData( "SwingArmPosition", swingArm.armMotor.getCurrentPosition());
+            telemetry.addData("SwingArmPosition", swingArm.armMotor.getCurrentPosition());
 
             telemetry.update();
 
             propDetector.getSelection();
-            if (gamepad1.left_trigger > 0) {
-                isFar = false;
-            } else if (gamepad1.right_trigger > 0) {
-                isFar = true;
-            }
-            if (gamepad1.x) {
-                isRed = false;
-            } else if (gamepad1.b) {
-                isRed = true;
+
+            //parkOnly = true;
+
+//            if (gamepad1.left_trigger > 0) {
+//                isFar = false;
+//            } else if (gamepad1.right_trigger > 0) {
+//                isFar = true;
+//            }
+
+            //THE FOLLOWING OPTIONS ARE TOGGLEABLE
+            //There's a 0.1 second delay between inputs to make controls work.
+
+            //NOW TOGGLABLE!!!!!!111!!!1!
+            if (gamepad1.right_trigger > 0) {
+                if (isFar) {
+                    isFar = false;
+                    sleep(100);
+                } else {
+                    isFar = true;
+                    sleep(100);
+                }
             }
 
-            //for testing (not legal in game):
-            if (gamepad1.left_bumper) {
-                selectionOverride = FirstVisionProcessor.Selected.LEFT;
-            }
-            else if (gamepad1.right_bumper) {
-                selectionOverride = FirstVisionProcessor.Selected.RIGHT;
-            }
-            else {
-                selectionOverride = FirstVisionProcessor.Selected.MIDDLE;
-            }
-            if (Overrideselection) {
-                telemetry.addData("OVERRIDE:", selectionOverride);
+            if (gamepad1.right_bumper) {
+                if (trianglePark) {
+                    trianglePark = false;
+                    sleep(100);
+                } else {
+                    trianglePark = true;
+                    sleep(100);
+                }
             }
 
-            parkOnly = true; // add gamepad input later
-            trianglePark = true; // add gamepad input later
+//            if (gamepad1.x) {
+//                isRed = false;
+//            } else if (gamepad1.b) {
+//                isRed = true;
+//            }
 
-            telemetry.addData("isRed:", isRed);
-            telemetry.addData("isFar:", isFar);
+            //haha togglable go brr
+            if (gamepad1.b) {
+                if (isRed) {
+                    isRed = false;
+                    sleep(100);
+                } else {
+                    isRed = true;
+                    sleep(100);
+                }
+            }
+
+        if (gamepad1.left_trigger > 0) {
+            if (parkOnly) {
+                parkOnly = false;
+                sleep(100);
+            } else {
+                parkOnly = true;
+                sleep(100);
+            }
         }
+
+        if (gamepad1.left_bumper) {
+            if (stalling) {
+                stalling = false;
+                sleep(100);
+            } else {
+                stalling = true;
+                sleep(100);
+            }
+        }
+
+        //for testing (not legal in game):
+//            if (gamepad1.left_bumper) {
+//                selectionOverride = FirstVisionProcessor.Selected.LEFT;
+//            }
+//            else if (gamepad1.right_bumper) {
+//                selectionOverride = FirstVisionProcessor.Selected.RIGHT;
+//            }
+//            else {
+//                selectionOverride = FirstVisionProcessor.Selected.MIDDLE;
+//            }
+//            if (Overrideselection) {
+//                telemetry.addData("OVERRIDE:", selectionOverride);
+//            }
+
+
+        String color;
+        String side;
+        String scoringPlan;
+        String parkingPos;
+        String stall;
+
+        if (isRed) {
+            color = "RED";
+        } else {
+            color = "BLUE";
+        }
+
+        if (isFar) {
+            side = "FAR";
+        } else {
+            side = "CLOSE";
+        }
+
+        if (parkOnly) {
+            scoringPlan = "IN PARKING";
+        } else {
+            scoringPlan = "ON BACKDROP";
+        }
+
+        if (trianglePark) {
+            parkingPos = "TRIANGLE";
+        } else {
+            parkingPos = "IN THE SQUARE HOLE";
+        }
+
+        if (stalling) {
+            stall = "YESSIR";
+        } else {
+            stall = "NO STALL?";
+        }
+
+        telemetry.addData("COLOR:", color);
+        telemetry.addData("SIDE:", side);
+        telemetry.addData("SCORING:", scoringPlan);
+        telemetry.addData("PARKING:", parkingPos);
+        telemetry.addData("WAITING FOR GOOFY AHH ALLIANCE PARTNER:", stall);
+    }
 
         // Set the encoders for closed loop speed control, and reset the heading.
         leftDriveF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -355,7 +451,7 @@ public class CenterStageAutonomous extends LinearOpMode {
 
         propVisionPortal.stopStreaming();
 
-        runAutonomousProgram(isFar, parkOnly, trianglePark);
+        runAutonomousProgram(isFar, parkOnly, trianglePark, stalling);
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
@@ -364,9 +460,7 @@ public class CenterStageAutonomous extends LinearOpMode {
     }
 
 
-    public void runAutonomousProgram(boolean isFar, boolean parkOnly, boolean trianglePark) {
-
-        //remove the /2 in drivespeed and troubleshoot
+    public void runAutonomousProgram(boolean isFar, boolean parkOnly, boolean trianglePark, boolean stalling) {
 
         swingArm.setPosition(armDrivePos);
         telemetry.addData( "SwingArmPosition", swingArm.armMotor.getCurrentPosition());
@@ -424,14 +518,15 @@ public class CenterStageAutonomous extends LinearOpMode {
                 driveStraight(DRIVE_SPEED, -14.0, 45.0, notMirrored);
                 driveStraight(DRIVE_SPEED, 14.0, 45.0, notMirrored);
                 turnToHeading(TURN_SPEED, 0.0, notMirrored);
-                distance = (distance * -1) - 3;
+                distance = (distance * -1) - 1;
                 driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
                 break;
             case MIDDLE:
                 distance -= 29;
                 driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
                 //driveStraight(DRIVE_SPEED, (-distance + 10.0), 0.0, notMirrored);
-                driveStraight(DRIVE_SPEED, (-distance - 3.0), 0.0, notMirrored);
+                distance = (distance * -1) - 3.0;
+                driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
                 break;
             case RIGHT:
                 distance -= 7;
@@ -441,18 +536,17 @@ public class CenterStageAutonomous extends LinearOpMode {
                 driveStraight(DRIVE_SPEED, -14.0, -45.0, notMirrored);
                 driveStraight(DRIVE_SPEED, 14.0, -45.0, notMirrored);
                 turnToHeading(TURN_SPEED, 0.0, notMirrored);
-                distance = (distance * -1) - 3;
+                distance = (distance * -1) - 1;
                 driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
                 break;
             case NONE:
                 distance -= 29;
                 driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
                 //driveStraight(DRIVE_SPEED, (-distance + 10.0), 0.0, notMirrored);
-                driveStraight(DRIVE_SPEED, (-distance - 3.0), 0.0, notMirrored);
+                distance = (distance * -1) - 3.0;
+                driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
                 break;
         }
-
-        turnToHeading(TURN_SPEED, 90.0, isMirrored);
 
         distance = -48;
 
@@ -461,13 +555,41 @@ public class CenterStageAutonomous extends LinearOpMode {
         }
         if (parkOnly) {
             if (!trianglePark) {
-                distance -= 26; //used to be 12
+                if (!stalling) {
+                    distance -= 26; //used to be 12
+                }
             }
         }
+        if (stalling) {
+            distance += 26;
+        }
 
-        //driveStraight(DRIVE_SPEED, distance, 90.0, isMirrored);
-
-        if (!parkOnly) { //with april tags and scoring
+        if (parkOnly) { //since we're only parking, let's drive forward facing and score the yellow pixel.
+            turnToHeading(TURN_SPEED, -90.0, isMirrored);
+            distance *= -1;
+            driveStraight(DRIVE_SPEED, distance, -90.0, isMirrored);
+            if (stalling) {
+                while(runtime.seconds() < 24) { runtime.reset(); }
+                driveStraight(DRIVE_SPEED, 26, -90.0, isMirrored); //remaining distance
+            }
+            if (trianglePark) {
+                turnToHeading(TURN_SPEED, 0.0, notMirrored);
+                driveStraight(DRIVE_SPEED, -80.0, 0.0, notMirrored);
+                turnToHeading(TURN_SPEED, -90.0, isMirrored);
+                driveStraight(DRIVE_SPEED, 30.0, -90.0, isMirrored);
+            }
+            intake.intakeMotor.setPower(-1);
+            driveStraight(SLOW_DRIVE_SPEED, 3, -90.0, isMirrored);
+            intake.intakeMotor.setPower(0);
+        }
+        // if it's scoring on the backdrop with april tags:
+        else if (!parkOnly) {
+            turnToHeading(TURN_SPEED, 90.0, isMirrored);
+            driveStraight(DRIVE_SPEED, distance, 90.0, isMirrored);
+            if (stalling) {
+                while(runtime.seconds() < 24) { runtime.reset(); }
+                driveStraight(DRIVE_SPEED, -26, 90.0, isMirrored); //remaining distance
+            }
             if (trianglePark) {
                 distance = -32.0;
             } else {
@@ -573,21 +695,29 @@ public class CenterStageAutonomous extends LinearOpMode {
                     }
                 }
             }
-        }
-
-        if (parkOnly) {
-            driveStraight(DRIVE_SPEED, distance, 90.0, isMirrored);
-            if (trianglePark) {
-                turnToHeading(TURN_SPEED, 0.0, notMirrored);
-                driveStraight(DRIVE_SPEED, -74.0, 0.0, notMirrored);
-                turnToHeading(TURN_SPEED, 90.0, isMirrored);
-                driveStraight(DRIVE_SPEED, -36.0, 90.0, isMirrored);
-            }
-        } else {
+            turnToHeading(TURN_SPEED, 0.0, notMirrored);
             driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
             turnToHeading(TURN_SPEED, 90.0, isMirrored);
-            driveStraight(DRIVE_SPEED, -36.0, 90.0, isMirrored);
+            driveStraight(DRIVE_SPEED, -38.0, 90.0, isMirrored);
         }
+
+//        if (parkOnly) { //since we're only parking, let's drive forward facing and score the yellow pixel.
+//            distance *= -1;
+//            driveStraight(DRIVE_SPEED, distance, -90.0, isMirrored);
+//            if (trianglePark) {
+//                turnToHeading(TURN_SPEED, 0.0, notMirrored);
+//                driveStraight(DRIVE_SPEED, -80.0, 0.0, notMirrored);
+//                turnToHeading(TURN_SPEED, -90.0, isMirrored);
+//                driveStraight(DRIVE_SPEED, 35.0, -90.0, isMirrored);
+//            }
+//            intake.intakeMotor.setPower(-1);
+//            driveStraight(SLOW_DRIVE_SPEED, 3, -90.0, isMirrored);
+//            intake.intakeMotor.setPower(0);
+//        } else {
+//            driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
+//            turnToHeading(TURN_SPEED, 90.0, isMirrored);
+//            driveStraight(DRIVE_SPEED, -38.0, 90.0, isMirrored);
+//        }
 
         swingArm.setPosition(armHardStop);
         telemetry.addData( "SwingArmPosition", swingArm.armMotor.getCurrentPosition());
@@ -899,7 +1029,7 @@ public class CenterStageAutonomous extends LinearOpMode {
      *
      * @param straight Set to true if we are driving straight, and the encoder positions should be included in the telemetry.
      */
-    private void sendTelemetry(boolean straight) {
+    private void sendTelemetry(boolean straight) { //SHOULD BE LABELED SOMETHING LIKE "driveSendTelemetry"
         if (straight) {
             telemetry.addData("Motion", "Drive Straight");
             telemetry.addData("Target Pos LF:RF:LB:RB", "%7d:%7d:%7d:%7d",

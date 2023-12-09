@@ -8,24 +8,30 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name="ServoTest", group="Robot")
 public class ServoTest extends OpMode {
-    DeliveryServoController board = new DeliveryServoController();
+    DroneLauncherServoController board = new DroneLauncherServoController();
     ElapsedTime rotationTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-    int rotationTime = 603;
+    int rotationTime = 100;
+    boolean launched = false;
 
 
 
     @Override
     public void init() {
-        board.init(hardwareMap);
+        board.init(hardwareMap, "launcherServo");
     }
 
     @Override
     public void loop() {
 //        DRONE LAUNCHER SERVO
         if (gamepad2.dpad_up) {
-            board.setServoPosition(0.5);
+            if (!launched) {
+                telemetry.addData("INPUTTED:", gamepad2.dpad_up);
+                while (rotationTimer.time() < rotationTime)
+                    board.setServoPosition(0.55);
+                launched = true;
+            }
+            //telemetry.addData("SERVO POS", board.servo.getPosition());
         }
-
 
 
 //        DELIVERY SERVO
