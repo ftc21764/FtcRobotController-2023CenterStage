@@ -17,7 +17,6 @@ public class Intake {
     private final Gamepad gamepad;
     static final double MAX_SPEED = 1.0;
 
-
     public Intake(HardwareMap hardwareMap, Telemetry telemetry, Gamepad gamepad) {
         this.telemetry = telemetry;
         this.gamepad = gamepad;

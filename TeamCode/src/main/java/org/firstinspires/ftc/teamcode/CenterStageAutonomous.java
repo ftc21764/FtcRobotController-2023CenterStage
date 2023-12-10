@@ -148,6 +148,8 @@ public class CenterStageAutonomous extends LinearOpMode {
     int armDrivePos = 4;
     int driveStraightLoops = 0;
 
+    double tbegin;
+
 
     //String allianceColor = "blue";
 
@@ -194,8 +196,11 @@ public class CenterStageAutonomous extends LinearOpMode {
     // These constants define the desired driving/control characteristics
     // They can/should be tweaked to suit the specific robot drive train.
     static final double DRIVE_SPEED = 0.2;     // Max driving speed for better distance accuracy.
-    static final double SLOW_DRIVE_SPEED = 0.1;
+    static final double SLOW_DRIVE_SPEED = (double)DRIVE_SPEED/2;
+    static final double FAST_DRIVE_SPEED = (double)DRIVE_SPEED*2;
     static final double TURN_SPEED = 0.2;     // Max Turn speed to limit turn rate
+    static final double SLOW_TURN_SPEED = (double)TURN_SPEED/2;
+    static final double FAST_TURN_SPEED = (double)TURN_SPEED*2;
     static final double HEADING_THRESHOLD = 4.0;    // How close must the heading get to the target before moving to next step.
     // Requiring more accuracy (a smaller number) will often make the turn take longer to get into the final position.
     // Define the Proportional control coefficient (or GAIN) for "heading control".
@@ -330,20 +335,20 @@ public class CenterStageAutonomous extends LinearOpMode {
             if (gamepad1.right_trigger > 0) {
                 if (isFar) {
                     isFar = false;
-                    sleep(100);
+                    sleep(10);
                 } else {
                     isFar = true;
-                    sleep(100);
+                    sleep(10);
                 }
             }
 
             if (gamepad1.right_bumper) {
                 if (trianglePark) {
                     trianglePark = false;
-                    sleep(100);
+                    sleep(10);
                 } else {
                     trianglePark = true;
-                    sleep(100);
+                    sleep(10);
                 }
             }
 
@@ -357,30 +362,30 @@ public class CenterStageAutonomous extends LinearOpMode {
             if (gamepad1.b) {
                 if (isRed) {
                     isRed = false;
-                    sleep(100);
+                    sleep(10);
                 } else {
                     isRed = true;
-                    sleep(100);
+                    sleep(10);
                 }
             }
 
         if (gamepad1.left_trigger > 0) {
             if (parkOnly) {
                 parkOnly = false;
-                sleep(100);
+                sleep(10);
             } else {
                 parkOnly = true;
-                sleep(100);
+                sleep(10);
             }
         }
 
         if (gamepad1.left_bumper) {
             if (stalling) {
                 stalling = false;
-                sleep(100);
+                sleep(10);
             } else {
                 stalling = true;
-                sleep(100);
+                sleep(10);
             }
         }
 
@@ -441,6 +446,7 @@ public class CenterStageAutonomous extends LinearOpMode {
         telemetry.addData("PARKING:", parkingPos);
         telemetry.addData("WAITING FOR GOOFY AHH ALLIANCE PARTNER:", stall);
     }
+        tbegin = (double) getRuntime();
 
         // Set the encoders for closed loop speed control, and reset the heading.
         leftDriveF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -499,8 +505,8 @@ public class CenterStageAutonomous extends LinearOpMode {
 
         //move up to spike marks
         double distance = -18.0;
-        double distanceToTravel;
-        distanceToTravel = distance;
+//        double distanceToTravel;
+//        distanceToTravel = distance;
 
         FirstVisionProcessor.Selected selected = propDetector.selection;
 
@@ -561,7 +567,7 @@ public class CenterStageAutonomous extends LinearOpMode {
             }
         }
         if (stalling) {
-            distance += 26;
+            distance += 48;
         }
 
         if (parkOnly) { //since we're only parking, let's drive forward facing and score the yellow pixel.
@@ -569,14 +575,30 @@ public class CenterStageAutonomous extends LinearOpMode {
             distance *= -1;
             driveStraight(DRIVE_SPEED, distance, -90.0, isMirrored);
             if (stalling) {
-                while(runtime.seconds() < 24) { runtime.reset(); }
-                driveStraight(DRIVE_SPEED, 26, -90.0, isMirrored); //remaining distance
+                if (trianglePark) {
+                    while ((double) (30 - (getRuntime() - tbegin)) > 10.0) {
+                        //runtime.reset();
+                        telemetry.addData("RUN TIME REMAINING:", (double) (30 - (getRuntime() - tbegin)));
+                        telemetry.addData("STALL TIME REMAINING:", (double) ((30 - (getRuntime() - tbegin)) - 10.0));
+                        telemetry.update();
+                    }
+                } else {
+                    while ((double) (30 - (getRuntime() - tbegin)) > 8.0) {
+                        //runtime.reset();
+                        telemetry.addData("RUN TIME REMAINING:", (double) (30 - (getRuntime() - tbegin)));
+                        telemetry.addData("STALL TIME REMAINING:", (double) ((30 - (getRuntime() - tbegin)) - 7.0));
+                        telemetry.update();
+                    }
+                }
             }
             if (trianglePark) {
-                turnToHeading(TURN_SPEED, 0.0, notMirrored);
-                driveStraight(DRIVE_SPEED, -80.0, 0.0, notMirrored);
-                turnToHeading(TURN_SPEED, -90.0, isMirrored);
-                driveStraight(DRIVE_SPEED, 30.0, -90.0, isMirrored);
+                driveStraight(FAST_DRIVE_SPEED, 48, -90.0, isMirrored); //remaining distance to get to line
+                turnToHeading(FAST_TURN_SPEED, 0.0, notMirrored);
+                driveStraight(FAST_DRIVE_SPEED, -80.0, 0.0, notMirrored);
+                turnToHeading(FAST_TURN_SPEED, -90.0, isMirrored);
+                driveStraight(FAST_DRIVE_SPEED, 27.0, -90.0, isMirrored);
+            } else {
+                driveStraight(DRIVE_SPEED, 64.0, -90.0, isMirrored); //remaining distance to park in square
             }
             intake.intakeMotor.setPower(-1);
             driveStraight(SLOW_DRIVE_SPEED, 3, -90.0, isMirrored);
@@ -587,8 +609,23 @@ public class CenterStageAutonomous extends LinearOpMode {
             turnToHeading(TURN_SPEED, 90.0, isMirrored);
             driveStraight(DRIVE_SPEED, distance, 90.0, isMirrored);
             if (stalling) {
-                while(runtime.seconds() < 24) { runtime.reset(); }
-                driveStraight(DRIVE_SPEED, -26, 90.0, isMirrored); //remaining distance
+                if (trianglePark) {
+                    while ((double) (30 - (getRuntime() - tbegin)) > 10.0) {
+                        //runtime.reset();
+                        telemetry.addData("RUN TIME REMAINING:", (double) (30 - (getRuntime() - tbegin)));
+                        telemetry.addData("STALL TIME REMAINING:", (double) ((30 - (getRuntime() - tbegin)) - 10.0));
+                        telemetry.update();
+                    }
+                    driveStraight(DRIVE_SPEED, -26, 90.0, isMirrored); //remaining distance
+                } else {
+                    while ((double) (30 - (getRuntime() - tbegin)) > 8.0) {
+                        //runtime.reset();
+                        telemetry.addData("RUN TIME REMAINING:", (double) (30 - (getRuntime() - tbegin)));
+                        telemetry.addData("STALL TIME REMAINING:", (double) ((30 - (getRuntime() - tbegin)) - 7.0));
+                        telemetry.update();
+                    }
+                    driveStraight(DRIVE_SPEED, -64, 90.0, isMirrored); //remaining distance
+                }
             }
             if (trianglePark) {
                 distance = -32.0;
