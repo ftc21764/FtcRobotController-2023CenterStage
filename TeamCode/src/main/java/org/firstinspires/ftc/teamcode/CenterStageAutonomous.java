@@ -210,10 +210,6 @@ public class CenterStageAutonomous extends LinearOpMode {
     static final double P_TURN_GAIN = 0.02;     // Larger is more responsive, but also less stable
     static final double P_DRIVE_GAIN = 0.03;     // Larger is more responsive, but also less stable
 
-    //stuff that makes the left and right side autonomous (hopefully) work! :D
-    // If your robot starts on the right side in the driver's view, (A2 or F5), set to 1
-    // If your robot starts on the left side in the driver's view, (A5 or F2), set to -1
-
     protected boolean isAutonomous = true;
 
     //this sets up for bulk reads!
@@ -315,6 +311,8 @@ public class CenterStageAutonomous extends LinearOpMode {
             telemetry.addData("right back starting:", rightDriveB.getCurrentPosition());
 
             telemetry.addData("SwingArmPosition", swingArm.armMotor.getCurrentPosition());
+
+            //telemetry.addData();
 
             telemetry.update();
 
@@ -582,6 +580,7 @@ public class CenterStageAutonomous extends LinearOpMode {
                         telemetry.addData("STALL TIME REMAINING:", (double) ((30 - (getRuntime() - tbegin)) - 10.0));
                         telemetry.update();
                     }
+                    driveStraight(FAST_DRIVE_SPEED, 48, -90.0, isMirrored); //remaining distance to get to line
                 } else {
                     while ((double) (30 - (getRuntime() - tbegin)) > 8.0) {
                         //runtime.reset();
@@ -589,19 +588,17 @@ public class CenterStageAutonomous extends LinearOpMode {
                         telemetry.addData("STALL TIME REMAINING:", (double) ((30 - (getRuntime() - tbegin)) - 7.0));
                         telemetry.update();
                     }
+                    driveStraight(DRIVE_SPEED, 64.0, -90.0, isMirrored); //remaining distance to park in square
                 }
             }
             if (trianglePark) {
-                driveStraight(FAST_DRIVE_SPEED, 48, -90.0, isMirrored); //remaining distance to get to line
                 turnToHeading(FAST_TURN_SPEED, 0.0, notMirrored);
                 driveStraight(FAST_DRIVE_SPEED, -80.0, 0.0, notMirrored);
                 turnToHeading(FAST_TURN_SPEED, -90.0, isMirrored);
                 driveStraight(FAST_DRIVE_SPEED, 27.0, -90.0, isMirrored);
-            } else {
-                driveStraight(DRIVE_SPEED, 64.0, -90.0, isMirrored); //remaining distance to park in square
             }
             intake.intakeMotor.setPower(-1);
-            driveStraight(SLOW_DRIVE_SPEED, 3, -90.0, isMirrored);
+            driveStraight(SLOW_DRIVE_SPEED, -3.0, -90.0, isMirrored);
             intake.intakeMotor.setPower(0);
         }
         // if it's scoring on the backdrop with april tags:
@@ -637,7 +634,7 @@ public class CenterStageAutonomous extends LinearOpMode {
             strafeTimer.reset();
             if (isRed) {
                 while (!findTag && strafeTimer.time() <= strafeTime) {
-                    startStrafe("right", strafeSpeed);
+                    startStrafe(strafeSpeed, 90.0, "right", isMirrored);
                     if (tagProcessor.getDetections().size() > 0) {
                         AprilTagDetection tag = tagProcessor.getDetections().get(0);
 
@@ -651,7 +648,7 @@ public class CenterStageAutonomous extends LinearOpMode {
 
                         telemetry.update();
 
-                        startStrafe("right", strafeSpeed);
+                        startStrafe(strafeSpeed, 90.0, "right", isMirrored);
 
                         switch (selected) {
                             case LEFT:
@@ -685,7 +682,7 @@ public class CenterStageAutonomous extends LinearOpMode {
                 }
             } else { //else it must be blue
                 while (!findTag && strafeTimer.time() <= strafeTime) {
-                    startStrafe("left", strafeSpeed);
+                    startStrafe(strafeSpeed, 90.0, "left", isMirrored);
                     if (tagProcessor.getDetections().size() > 0) {
                         AprilTagDetection tag = tagProcessor.getDetections().get(0);
 
@@ -699,7 +696,7 @@ public class CenterStageAutonomous extends LinearOpMode {
 
                         telemetry.update();
 
-                        startStrafe("left", strafeSpeed);
+                        startStrafe(strafeSpeed, 90.0, "left", isMirrored);
 
                         switch (selected) {
                             case LEFT:
@@ -880,10 +877,27 @@ public class CenterStageAutonomous extends LinearOpMode {
 
     /**
      * Method to start strafe for april tag detection
+     * @param strafeSpeed speed to strafe at
+     * @param heading heading to maintain while strafing
      * @param direction direction to strafe string ("left" or "right")
+     * @param isMirrored mirroring for red/blue side?
      */
-    public void startStrafe(String direction, double strafeSpeed) {
+    public void startStrafe(double strafeSpeed, double heading, String direction, boolean isMirrored) {
         if (opModeIsActive()) {
+            ElapsedTime holdTimer = new ElapsedTime();
+            holdTimer.reset();
+
+            if (isMirrored && isRed) {
+                heading *= -1;
+            }
+
+            // Determine required steering to keep on heading
+            turnSpeed = getSteeringCorrection(heading, P_TURN_GAIN);
+            // Clip the speed to the maximum permitted value.
+            turnSpeed = Range.clip(turnSpeed, -strafeSpeed, strafeSpeed);
+            // Pivot in place by applying the turning correction
+            strafeMoveRobot(direction, strafeSpeed, turnSpeed);
+
             Range.clip(strafeSpeed, 0, 1.0);
             if (direction == "left") {
                 leftDriveF.setPower(-strafeSpeed);
@@ -897,6 +911,7 @@ public class CenterStageAutonomous extends LinearOpMode {
                 rightDriveB.setPower(strafeSpeed);
             }
             clearBulkCache();
+            mechanismLoop();
         }
     }
 
@@ -1051,6 +1066,33 @@ public class CenterStageAutonomous extends LinearOpMode {
         leftDriveB.setPower(leftSpeed);
         rightDriveF.setPower(rightSpeed);
         rightDriveB.setPower(rightSpeed);
+    }
+
+    public void strafeMoveRobot(String direction, double drive, double turn) {
+        driveSpeed = drive;     // save this value as a class member so it can be used by telemetry.
+        turnSpeed = turn;      // save this value as a class member so it can be used by telemetry.
+
+        leftSpeed = drive - turn;
+        rightSpeed = drive + turn;
+
+        // Scale speeds down if either one exceeds +/- 1.0;
+        double max = Math.max(Math.abs(leftSpeed), Math.abs(rightSpeed));
+        if (max > 1.0) {
+            leftSpeed /= max;
+            rightSpeed /= max;
+        }
+
+        if (direction == "left") {
+            leftDriveF.setPower(-leftSpeed);
+            leftDriveB.setPower(leftSpeed);
+            rightDriveF.setPower(rightSpeed);
+            rightDriveB.setPower(-rightSpeed);
+        } else {
+            leftDriveF.setPower(leftSpeed);
+            leftDriveB.setPower(-leftSpeed);
+            rightDriveF.setPower(-rightSpeed);
+            rightDriveB.setPower(rightSpeed);
+        }
     }
 
     protected void clearBulkCache() {
