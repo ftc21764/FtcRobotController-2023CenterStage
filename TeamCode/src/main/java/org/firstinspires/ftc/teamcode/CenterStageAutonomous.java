@@ -165,7 +165,7 @@ public class CenterStageAutonomous extends LinearOpMode {
 
     boolean findTag = false;
 
-    double strafeSpeed = 0.0375;
+    double strafeSpeed = 0.25;
 
     // Calculate the COUNTS_PER_INCH for your specific drive train.
     // Go to your motor vendor website to determine your motor's COUNTS_PER_MOTOR_REV
@@ -894,7 +894,7 @@ public class CenterStageAutonomous extends LinearOpMode {
             // Determine required steering to keep on heading
             turnSpeed = getSteeringCorrection(heading, P_TURN_GAIN);
             // Clip the speed to the maximum permitted value.
-            turnSpeed = Range.clip(turnSpeed, -strafeSpeed, strafeSpeed);
+            turnSpeed = Range.clip(turnSpeed, -0.5, 0.5);
             // Pivot in place by applying the turning correction
             strafeMoveRobot(direction, strafeSpeed, turnSpeed);
 
