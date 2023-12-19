@@ -127,6 +127,8 @@ public class CenterStageAutonomous extends LinearOpMode {
     private double turnSpeed = 0;
     private double leftSpeed = 0;
     private double rightSpeed = 0;
+    private double frontSpeed = 0;
+    private double backSpeed = 0;
     private int leftTargetF = 0;
     private int leftTargetB = 0;
     private int rightTargetF = 0;
@@ -333,20 +335,20 @@ public class CenterStageAutonomous extends LinearOpMode {
             if (gamepad1.right_trigger > 0) {
                 if (isFar) {
                     isFar = false;
-                    sleep(10);
+                    while (!gamepad1.atRest());
                 } else {
                     isFar = true;
-                    sleep(10);
+                    while (!gamepad1.atRest());
                 }
             }
 
             if (gamepad1.right_bumper) {
                 if (trianglePark) {
                     trianglePark = false;
-                    sleep(10);
+                    while (!gamepad1.atRest());
                 } else {
                     trianglePark = true;
-                    sleep(10);
+                    while (!gamepad1.atRest());
                 }
             }
 
@@ -360,30 +362,30 @@ public class CenterStageAutonomous extends LinearOpMode {
             if (gamepad1.b) {
                 if (isRed) {
                     isRed = false;
-                    sleep(10);
+                    while (!gamepad1.atRest());
                 } else {
                     isRed = true;
-                    sleep(10);
+                    while (!gamepad1.atRest());
                 }
             }
 
         if (gamepad1.left_trigger > 0) {
             if (parkOnly) {
                 parkOnly = false;
-                sleep(10);
+                while (!gamepad1.atRest());
             } else {
                 parkOnly = true;
-                sleep(10);
+                while (!gamepad1.atRest());
             }
         }
 
         if (gamepad1.left_bumper) {
             if (stalling) {
                 stalling = false;
-                sleep(10);
+                while (!gamepad1.atRest());
             } else {
                 stalling = true;
-                sleep(10);
+                while (!gamepad1.atRest());
             }
         }
 
@@ -884,8 +886,8 @@ public class CenterStageAutonomous extends LinearOpMode {
      */
     public void startStrafe(double strafeSpeed, double heading, String direction, boolean isMirrored) {
         if (opModeIsActive()) {
-            ElapsedTime holdTimer = new ElapsedTime();
-            holdTimer.reset();
+//            ElapsedTime holdTimer = new ElapsedTime();
+//            holdTimer.reset();
 
             if (isMirrored && isRed) {
                 heading *= -1;
@@ -1069,11 +1071,11 @@ public class CenterStageAutonomous extends LinearOpMode {
     }
 
     public void strafeMoveRobot(String direction, double drive, double turn) {
-        driveSpeed = drive;     // save this value as a class member so it can be used by telemetry.
-        turnSpeed = turn;      // save this value as a class member so it can be used by telemetry.
+        //driveSpeed = drive;     // save this value as a class member so it can be used by telemetry.
+        //turnSpeed = turn;      // save this value as a class member so it can be used by telemetry.
 
-        leftSpeed = drive - turn;
-        rightSpeed = drive + turn;
+        frontSpeed = drive + turn;
+        backSpeed = drive - turn;
 
         // Scale speeds down if either one exceeds +/- 1.0;
         double max = Math.max(Math.abs(leftSpeed), Math.abs(rightSpeed));
@@ -1083,15 +1085,15 @@ public class CenterStageAutonomous extends LinearOpMode {
         }
 
         if (direction == "left") {
-            leftDriveF.setPower(-leftSpeed);
-            leftDriveB.setPower(leftSpeed);
-            rightDriveF.setPower(rightSpeed);
-            rightDriveB.setPower(-rightSpeed);
+            leftDriveF.setPower(-frontSpeed);
+            leftDriveB.setPower(backSpeed);
+            rightDriveF.setPower(frontSpeed);
+            rightDriveB.setPower(-backSpeed);
         } else {
-            leftDriveF.setPower(leftSpeed);
-            leftDriveB.setPower(-leftSpeed);
-            rightDriveF.setPower(-rightSpeed);
-            rightDriveB.setPower(rightSpeed);
+            leftDriveF.setPower(frontSpeed);
+            leftDriveB.setPower(-backSpeed);
+            rightDriveF.setPower(-frontSpeed);
+            rightDriveB.setPower(backSpeed);
         }
     }
 
