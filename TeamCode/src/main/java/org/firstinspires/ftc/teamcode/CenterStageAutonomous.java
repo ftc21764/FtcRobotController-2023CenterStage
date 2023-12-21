@@ -152,6 +152,12 @@ public class CenterStageAutonomous extends LinearOpMode {
 
     double tbegin;
 
+    int aprilTagDriveDistance = 0;
+    int aprilTagIdNumber = 0;
+    int aprilTagInitialDistance = 12;
+    int aprilNearDistance = 6;
+    int aprilMidDistance = 12;
+    int aprilFarDistance = 18;
 
     //String allianceColor = "blue";
 
@@ -167,7 +173,7 @@ public class CenterStageAutonomous extends LinearOpMode {
 
     boolean findTag = false;
 
-    double strafeSpeed = 0.25;
+    double strafeSpeed = 0.1;
 
     // Calculate the COUNTS_PER_INCH for your specific drive train.
     // Go to your motor vendor website to determine your motor's COUNTS_PER_MOTOR_REV
@@ -513,8 +519,35 @@ public class CenterStageAutonomous extends LinearOpMode {
         if(Overrideselection){
             selected = selectionOverride;
         }
-        //push to corresponding spike mark
 
+        /*switch (selected){
+            case LEFT:
+                if(!isRed){
+                aprilTagDriveDistance = aprilTagInitialDistance + aprilTagNearDistance
+                aprilTagIdNumber = 1
+                }
+                else{
+                aprilTagDriveDistance = aprilTagInitialDistance + aprilTagFarDistance
+                aprilTagIdNumber = 4
+                }
+                break;
+            case MIDDLE:
+                aprilTagDriveDistance = aprilTagInitialDistance + aprilTagMidDistance
+                if(!isRed){aprilTagIdNumber = 2}
+                else{aprilTagIdNumber = 5}
+                break;
+            case RIGHT:
+                if(!isRed){
+                aprilTagDriveDistance = aprilTagInitialDistance + aprilTagFarDistance
+                aprilTagIdNumber = 3
+                }
+                else{
+                aprilTagDriveDistance = aprilTagInitialDistance + aprilTagNearDistance
+                aprilTagIdNumber = 6
+                }
+        }
+        */
+        //push to corresponding spike mark
         switch (selected) {
             case LEFT:
                 distance -= 7;
@@ -554,7 +587,7 @@ public class CenterStageAutonomous extends LinearOpMode {
                 break;
         }
 
-        distance = -48;
+        distance = -54;
 
         if (isFar) {
             distance -= 84;
@@ -626,6 +659,32 @@ public class CenterStageAutonomous extends LinearOpMode {
                     driveStraight(DRIVE_SPEED, -64, 90.0, isMirrored); //remaining distance
                 }
             }
+
+           /* if (!parkOnly && isBlue){
+                turnToHeading(TURN_SPEED, 0.0, notMirrored)
+                if(SELECTION.LEFT){
+           driveStraight(DRIVE_SPEED, 12 + 6, heading, notMirrored)
+           }
+                else if(SELECTION.MIDDLE){
+                driveStraight(DRIVE_SPEED, 12 + 12, heading, notMirrored)
+                }
+                else (SELECTION.RIGHT){
+                driveStraight(DRIVE_SPEED, 12 + 18, heading, notMirrored)
+              }
+           }
+            if (!parkOnly && isRed){
+                turnToHeading(TURN_SPEED, 0.0, notMirrored)
+                if(SELECTION.RIGHT){
+                    driveStraight(DRIVE_SPEED, 12 + 6, heading, notMirrored)
+                }
+                else if(SELECTION.MIDDLE){
+                    driveStraight(DRIVE_SPEED, 12 + 12, heading, notMirrored)
+                }
+                else(SELECTION.LEFT){
+                    driveStraight(DRIVE_SPEED, 12 + 18, heading, notMirrored)
+                }
+            }
+            */
             if (trianglePark) {
                 distance = -32.0;
             } else {
@@ -913,7 +972,7 @@ public class CenterStageAutonomous extends LinearOpMode {
                 rightDriveB.setPower(strafeSpeed);
             }
             clearBulkCache();
-            mechanismLoop();
+            //mechanismLoop();
         }
     }
 
