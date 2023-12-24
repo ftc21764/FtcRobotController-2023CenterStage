@@ -15,7 +15,7 @@ public class Intake {
     protected DcMotor intakeMotor;
     private final Telemetry telemetry;
     private final Gamepad gamepad;
-    static final double MAX_SPEED = 1.0;
+    static final double MAX_SPEED = 0.75;
 
     public Intake(HardwareMap hardwareMap, Telemetry telemetry, Gamepad gamepad) {
         this.telemetry = telemetry;

@@ -158,6 +158,12 @@ public class CenterStageAutonomous extends LinearOpMode {
     int aprilNearDistance = 6;
     int aprilMidDistance = 12;
     int aprilFarDistance = 18;
+    int backupToSeeAprilTag = -12;
+    double aprilTag_CenterGoal = 0; // zero or how far to the left or right we want to be
+    double aprilTag_Threshold = 0.5;
+    double aprilTag_AdjustedX = 0; // this will be our adjusted value off center goal of ftcPose.X
+    double LFRBSpeed = 0;
+    double RFLBSpeed = 0;
 
     //String allianceColor = "blue";
 
@@ -174,6 +180,7 @@ public class CenterStageAutonomous extends LinearOpMode {
     boolean findTag = false;
 
     double strafeSpeed = 0.1;
+    double directionToStrafe = 0;
 
     // Calculate the COUNTS_PER_INCH for your specific drive train.
     // Go to your motor vendor website to determine your motor's COUNTS_PER_MOTOR_REV
@@ -545,6 +552,7 @@ public class CenterStageAutonomous extends LinearOpMode {
                 aprilTagDriveDistance = aprilTagInitialDistance + aprilTagNearDistance
                 aprilTagIdNumber = 6
                 }
+                break;
         }
         */
         //push to corresponding spike mark
@@ -703,7 +711,7 @@ public class CenterStageAutonomous extends LinearOpMode {
 
                         telemetry.addLine(String.format("XYZ %6.2f %6.2f %6.2f", tag.ftcPose.x, tag.ftcPose.y, tag.ftcPose.z));
 
-                        telemetry.addLine(String.format("RPY %6.2f %6.2f %6.2f", tag.ftcPose.roll, tag.ftcPose.pitch, tag.ftcPose.yaw ));
+                        telemetry.addLine(String.format("RPY %6.2f %6.2f %6.2f", tag.ftcPose.roll, tag.ftcPose.pitch, tag.ftcPose.yaw));
 
                         telemetry.addData("STRAFE TIME ELAPSED: ", strafeTimer.time());
 
@@ -794,8 +802,39 @@ public class CenterStageAutonomous extends LinearOpMode {
             driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
             turnToHeading(TURN_SPEED, 90.0, isMirrored);
             driveStraight(DRIVE_SPEED, -38.0, 90.0, isMirrored);
-        }
 
+
+            /*
+
+            aprilTag_CenterGoal = 0; // zero or how far to the left or right we want to be
+            aprilTag_Threshold = 0.5;
+            aprilTag_AdjustedX = 0; // this will be our adjusted value off center goal of ftcPose.X
+            LFRBSpeed = 0;
+            RFLBSpeed = 0;
+            if(!parkOnly){
+                driveStraight(DRIVE_SPEED, aprilTagDriveDistance, 0.0, notMirrored)
+                turnToHeading(TURN_SPEED, 90.0, isMirrored)
+                driveStraight(DRIVE_SPEED, backupToSeeAprilTag, 90.0, notMirrored}
+                if(tag.id == aprilTagIdNumber){aprilTag_AdjustedX = tag.ftcPose.x - aprilTag_CenterGoal
+                RFLBSpeed = strafeSpeed * (aprilTag_AdjustedX/Math.abs(aprilTag_AdjustedX))
+                LFRBSpeed = -1 * RFLBSpeed
+                while(Math.abs(aprilTag_AdjustedX) > aprilTag_Threshold){
+                    leftDriveF.setpower(LFRBSpeed)
+                    rightDriveB.setpower(LFRBSpeed)
+                    rightDriveF.setpower(RFLBSpeed)
+                    leftDriveB.setpower(RFLBSpeed)
+                    if(tag.id == aprilTagIdNumber){aprilTag_AdjustedX = tag.ftcPose.x - aprilTag_CenterGoal}
+                }
+                leftDriveF.setpower(0)
+                rightDriveB.setpower(0)
+                rightDriveF.setpower(0)
+                leftDriveB.setpower(0)
+                driveStraight(DRIVE_SPEED, 1, 90, notMirrored)
+                swingArm.setposition(armDelivery)
+                set
+                }
+                */
+        }
 //        if (parkOnly) { //since we're only parking, let's drive forward facing and score the yellow pixel.
 //            distance *= -1;
 //            driveStraight(DRIVE_SPEED, distance, -90.0, isMirrored);
