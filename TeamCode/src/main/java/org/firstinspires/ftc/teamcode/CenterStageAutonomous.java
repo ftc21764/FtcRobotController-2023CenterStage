@@ -114,6 +114,7 @@ public class CenterStageAutonomous extends LinearOpMode {
     protected Intake intake = null;
     protected SwingArm swingArm = null;
     protected ElapsedTime runtime = new ElapsedTime();
+    protected DeliveryServoController deliveryBoard = null;
 
     private double robotHeading = 0;
     private double headingOffset = 0;
@@ -154,11 +155,11 @@ public class CenterStageAutonomous extends LinearOpMode {
 
     int aprilTagDriveDistance = 0;
     int aprilTagIdNumber = 0;
-    int aprilTagInitialDistance = 12;
+    int aprilTagInitialDistance = 24;
     int aprilNearDistance = 6;
     int aprilMidDistance = 12;
     int aprilFarDistance = 18;
-    int backupToSeeAprilTag = -12;
+    int driveBackToSeeAprilTag = -2;
     double aprilTag_CenterGoal = 0; // zero or how far to the left or right we want to be
     double aprilTag_Threshold = 0.5;
     double aprilTag_AdjustedX = 0; // this will be our adjusted value off center goal of ftcPose.X
@@ -240,6 +241,7 @@ public class CenterStageAutonomous extends LinearOpMode {
         //linearSlide = new LinearSlide(hardwareMap, telemetry, gamepad2);
         intake = new Intake(hardwareMap, telemetry, gamepad2);
         swingArm = new SwingArm(hardwareMap, telemetry, gamepad2, true);
+        deliveryBoard = new DeliveryServoController();
         //swingArm = new SwingArm(hardwareMap, telemetry, gamepad2, isAutonomous);
 
         boolean isNear;
@@ -312,6 +314,7 @@ public class CenterStageAutonomous extends LinearOpMode {
     @Override
     public void runOpMode() {
         setupRobot();
+        deliveryBoard.init(hardwareMap);
         // Wait for the game to start (Display Gyro value while waiting)
         propDetector = new FirstVisionProcessor();
         propVisionPortal = VisionPortal.easyCreateWithDefaults(hardwareMap.get(WebcamName.class, "Webcam 1"), propDetector);
@@ -527,34 +530,34 @@ public class CenterStageAutonomous extends LinearOpMode {
             selected = selectionOverride;
         }
 
-        /*switch (selected){
+        switch (selected){
             case LEFT:
                 if(!isRed){
-                aprilTagDriveDistance = aprilTagInitialDistance + aprilTagNearDistance
-                aprilTagIdNumber = 1
+                aprilTagDriveDistance = aprilTagInitialDistance + aprilNearDistance;
+                aprilTagIdNumber = 1;
                 }
                 else{
-                aprilTagDriveDistance = aprilTagInitialDistance + aprilTagFarDistance
-                aprilTagIdNumber = 4
+                aprilTagDriveDistance = aprilTagInitialDistance + aprilFarDistance;
+                aprilTagIdNumber = 4;
                 }
                 break;
             case MIDDLE:
-                aprilTagDriveDistance = aprilTagInitialDistance + aprilTagMidDistance
-                if(!isRed){aprilTagIdNumber = 2}
-                else{aprilTagIdNumber = 5}
+                aprilTagDriveDistance = aprilTagInitialDistance + aprilMidDistance;
+                if(!isRed){aprilTagIdNumber = 2;}
+                else{aprilTagIdNumber = 5;}
                 break;
             case RIGHT:
                 if(!isRed){
-                aprilTagDriveDistance = aprilTagInitialDistance + aprilTagFarDistance
-                aprilTagIdNumber = 3
+                aprilTagDriveDistance = aprilTagInitialDistance + aprilFarDistance;
+                aprilTagIdNumber = 3;
                 }
                 else{
-                aprilTagDriveDistance = aprilTagInitialDistance + aprilTagNearDistance
-                aprilTagIdNumber = 6
+                aprilTagDriveDistance = aprilTagInitialDistance + aprilNearDistance;
+                aprilTagIdNumber = 6;
                 }
                 break;
         }
-        */
+
         //push to corresponding spike mark
         switch (selected) {
             case LEFT:
@@ -595,7 +598,7 @@ public class CenterStageAutonomous extends LinearOpMode {
                 break;
         }
 
-        distance = -54;
+        distance = -50;
 
         if (isFar) {
             distance -= 84;
@@ -667,6 +670,43 @@ public class CenterStageAutonomous extends LinearOpMode {
                     driveStraight(DRIVE_SPEED, -64, 90.0, isMirrored); //remaining distance
                 }
             }
+            turnToHeading(TURN_SPEED, 180.0, notMirrored);
+            driveStraight(DRIVE_SPEED, aprilTagDriveDistance, 180.0, notMirrored);
+            turnToHeading(TURN_SPEED, 90.0, isMirrored);
+            driveStraight(DRIVE_SPEED, driveBackToSeeAprilTag, 90.0, notMirrored);
+            if (tagProcessor.getDetections().size() > 0) {
+                AprilTagDetection tag = tagProcessor.getDetections().get(0);
+                if (tag.id == aprilTagIdNumber) {
+                    aprilTag_AdjustedX = tag.ftcPose.x - aprilTag_CenterGoal;
+                }
+                RFLBSpeed = strafeSpeed * (aprilTag_AdjustedX / Math.abs(aprilTag_AdjustedX));
+                LFRBSpeed = -1 * RFLBSpeed;
+                while (Math.abs(aprilTag_AdjustedX) > aprilTag_Threshold) {
+                    leftDriveF.setPower(LFRBSpeed);
+                    rightDriveB.setPower(LFRBSpeed);
+                    rightDriveF.setPower(RFLBSpeed);
+                    leftDriveB.setPower(RFLBSpeed);
+                    if (tagProcessor.getDetections().size() > 0) {
+                        tag = tagProcessor.getDetections().get(0);
+                        if (tag.id == aprilTagIdNumber) {aprilTag_AdjustedX = tag.ftcPose.x - aprilTag_CenterGoal;}
+                    }
+                }
+                leftDriveF.setPower(0);
+                rightDriveB.setPower(0);
+                rightDriveF.setPower(0);
+                leftDriveB.setPower(0);
+                driveStraight(DRIVE_SPEED, 1, 90, notMirrored);
+//                swingArm.setPosition(armDelivery);
+//                ElapsedTime rotationTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+//                int fullRotationTime = 1809;
+//                rotationTimer.reset();
+//                while (rotationTimer.time() < fullRotationTime) {
+//                    deliveryBoard.setServoPosition(0);
+//                }
+            }
+
+        }
+
 
            /* if (!parkOnly && isBlue){
                 turnToHeading(TURN_SPEED, 0.0, notMirrored)
@@ -693,148 +733,148 @@ public class CenterStageAutonomous extends LinearOpMode {
                 }
             }
             */
-            if (trianglePark) {
-                distance = -32.0;
-            } else {
-                distance = 32.0;
-            }
-            ElapsedTime strafeTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
-            int strafeTime = 6;
-            strafeTimer.reset();
-            if (isRed) {
-                while (!findTag && strafeTimer.time() <= strafeTime) {
-                    startStrafe(strafeSpeed, 90.0, "right", isMirrored);
-                    if (tagProcessor.getDetections().size() > 0) {
-                        AprilTagDetection tag = tagProcessor.getDetections().get(0);
-
-                        telemetry.addData("ID", tag.id);
-
-                        telemetry.addLine(String.format("XYZ %6.2f %6.2f %6.2f", tag.ftcPose.x, tag.ftcPose.y, tag.ftcPose.z));
-
-                        telemetry.addLine(String.format("RPY %6.2f %6.2f %6.2f", tag.ftcPose.roll, tag.ftcPose.pitch, tag.ftcPose.yaw));
-
-                        telemetry.addData("STRAFE TIME ELAPSED: ", strafeTimer.time());
-
-                        telemetry.update();
-
-                        startStrafe(strafeSpeed, 90.0, "right", isMirrored);
-
-                        switch (selected) {
-                            case LEFT:
-                                if (tag.id == 4 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) { //>= 0?
-                                    stopStrafe();
-                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
-                                    distance -= 6;
-                                    findTag = true;
-                                }
-                            case MIDDLE:
-                                if (tag.id == 5 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
-                                    stopStrafe();
-                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
-                                    findTag = true;
-                                }
-                            case RIGHT:
-                                if (tag.id == 6 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
-                                    stopStrafe();
-                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
-                                    distance += 6;
-                                    findTag = true;
-                                }
-                            case NONE:
-                                if (tag.id == 5 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
-                                    stopStrafe();
-                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
-                                    findTag = true;
-                                }
-                        }
-                    }
-                }
-            } else { //else it must be blue
-                while (!findTag && strafeTimer.time() <= strafeTime) {
-                    startStrafe(strafeSpeed, 90.0, "left", isMirrored);
-                    if (tagProcessor.getDetections().size() > 0) {
-                        AprilTagDetection tag = tagProcessor.getDetections().get(0);
-
-                        telemetry.addData("ID", tag.id);
-
-                        telemetry.addLine(String.format("XYZ %6.2f %6.2f %6.2f", tag.ftcPose.x, tag.ftcPose.y, tag.ftcPose.z));
-
-                        telemetry.addLine(String.format("RPY %6.2f %6.2f %6.2f", tag.ftcPose.roll, tag.ftcPose.pitch, tag.ftcPose.yaw));
-
-                        telemetry.addData("STRAFE TIME ELAPSED: ", strafeTimer.time());
-
-                        telemetry.update();
-
-                        startStrafe(strafeSpeed, 90.0, "left", isMirrored);
-
-                        switch (selected) {
-                            case LEFT:
-                                if (tag.id == 1 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) { //<= 0?
-                                    stopStrafe();
-                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
-                                    distance -= 6;
-                                    findTag = true;
-                                }
-                            case MIDDLE:
-                                if (tag.id == 2 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
-                                    stopStrafe();
-                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
-                                    findTag = true;
-                                }
-                            case RIGHT:
-                                if (tag.id == 3 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
-                                    stopStrafe();
-                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
-                                    distance += 6;
-                                    findTag = true;
-                                }
-                            case NONE:
-                                if (tag.id == 2 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
-                                    stopStrafe();
-                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
-                                    findTag = true;
-                                }
-                        }
-                    }
-                }
-            }
-            turnToHeading(TURN_SPEED, 0.0, notMirrored);
-            driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
-            turnToHeading(TURN_SPEED, 90.0, isMirrored);
-            driveStraight(DRIVE_SPEED, -38.0, 90.0, isMirrored);
-
-
-            /*
-
-            aprilTag_CenterGoal = 0; // zero or how far to the left or right we want to be
-            aprilTag_Threshold = 0.5;
-            aprilTag_AdjustedX = 0; // this will be our adjusted value off center goal of ftcPose.X
-            LFRBSpeed = 0;
-            RFLBSpeed = 0;
-            if(!parkOnly){
-                driveStraight(DRIVE_SPEED, aprilTagDriveDistance, 0.0, notMirrored)
-                turnToHeading(TURN_SPEED, 90.0, isMirrored)
-                driveStraight(DRIVE_SPEED, backupToSeeAprilTag, 90.0, notMirrored}
-                if(tag.id == aprilTagIdNumber){aprilTag_AdjustedX = tag.ftcPose.x - aprilTag_CenterGoal
-                RFLBSpeed = strafeSpeed * (aprilTag_AdjustedX/Math.abs(aprilTag_AdjustedX))
-                LFRBSpeed = -1 * RFLBSpeed
-                while(Math.abs(aprilTag_AdjustedX) > aprilTag_Threshold){
-                    leftDriveF.setpower(LFRBSpeed)
-                    rightDriveB.setpower(LFRBSpeed)
-                    rightDriveF.setpower(RFLBSpeed)
-                    leftDriveB.setpower(RFLBSpeed)
-                    if(tag.id == aprilTagIdNumber){aprilTag_AdjustedX = tag.ftcPose.x - aprilTag_CenterGoal}
-                }
-                leftDriveF.setpower(0)
-                rightDriveB.setpower(0)
-                rightDriveF.setpower(0)
-                leftDriveB.setpower(0)
-                driveStraight(DRIVE_SPEED, 1, 90, notMirrored)
-                swingArm.setposition(armDelivery)
-                set
-                }
-                */
-        }
+//            if (trianglePark) {
+//                distance = -32.0;
+//            } else {
+//                distance = 32.0;
+//            }
+//            ElapsedTime strafeTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+//            int strafeTime = 6;
+//            strafeTimer.reset();
+//            if (isRed) {
+//                while (!findTag && strafeTimer.time() <= strafeTime) {
+//                    startStrafe(strafeSpeed, 90.0, "right", isMirrored);
+//                    if (tagProcessor.getDetections().size() > 0) {
+//                        AprilTagDetection tag = tagProcessor.getDetections().get(0);
+//
+//                        telemetry.addData("ID", tag.id);
+//
+//                        telemetry.addLine(String.format("XYZ %6.2f %6.2f %6.2f", tag.ftcPose.x, tag.ftcPose.y, tag.ftcPose.z));
+//
+//                        telemetry.addLine(String.format("RPY %6.2f %6.2f %6.2f", tag.ftcPose.roll, tag.ftcPose.pitch, tag.ftcPose.yaw));
+//
+//                        telemetry.addData("STRAFE TIME ELAPSED: ", strafeTimer.time());
+//
+//                        telemetry.update();
+//
+//                        startStrafe(strafeSpeed, 90.0, "right", isMirrored);
+//
+//                        switch (selected) {
+//                            case LEFT:
+//                                if (tag.id == 4 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) { //>= 0?
+//                                    stopStrafe();
+//                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
+//                                    distance -= 6;
+//                                    findTag = true;
+//                                }
+//                            case MIDDLE:
+//                                if (tag.id == 5 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
+//                                    stopStrafe();
+//                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
+//                                    findTag = true;
+//                                }
+//                            case RIGHT:
+//                                if (tag.id == 6 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
+//                                    stopStrafe();
+//                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
+//                                    distance += 6;
+//                                    findTag = true;
+//                                }
+//                            case NONE:
+//                                if (tag.id == 5 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
+//                                    stopStrafe();
+//                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
+//                                    findTag = true;
+//                                }
+//                        }
+//                    }
+//                }
+//            } else { //else it must be blue
+//                while (!findTag && strafeTimer.time() <= strafeTime) {
+//                    startStrafe(strafeSpeed, 90.0, "left", isMirrored);
+//                    if (tagProcessor.getDetections().size() > 0) {
+//                        AprilTagDetection tag = tagProcessor.getDetections().get(0);
+//
+//                        telemetry.addData("ID", tag.id);
+//
+//                        telemetry.addLine(String.format("XYZ %6.2f %6.2f %6.2f", tag.ftcPose.x, tag.ftcPose.y, tag.ftcPose.z));
+//
+//                        telemetry.addLine(String.format("RPY %6.2f %6.2f %6.2f", tag.ftcPose.roll, tag.ftcPose.pitch, tag.ftcPose.yaw));
+//
+//                        telemetry.addData("STRAFE TIME ELAPSED: ", strafeTimer.time());
+//
+//                        telemetry.update();
+//
+//                        startStrafe(strafeSpeed, 90.0, "left", isMirrored);
+//
+//                        switch (selected) {
+//                            case LEFT:
+//                                if (tag.id == 1 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) { //<= 0?
+//                                    stopStrafe();
+//                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
+//                                    distance -= 6;
+//                                    findTag = true;
+//                                }
+//                            case MIDDLE:
+//                                if (tag.id == 2 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
+//                                    stopStrafe();
+//                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
+//                                    findTag = true;
+//                                }
+//                            case RIGHT:
+//                                if (tag.id == 3 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
+//                                    stopStrafe();
+//                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
+//                                    distance += 6;
+//                                    findTag = true;
+//                                }
+//                            case NONE:
+//                                if (tag.id == 2 && (tag.ftcPose.x < 0.5 && tag.ftcPose.x > -0.5)) {
+//                                    stopStrafe();
+//                                    turnToHeading(TURN_SPEED, 0.0, notMirrored);
+//                                    findTag = true;
+//                                }
+//                        }
+//                    }
+//                }
+//            }
+//            turnToHeading(TURN_SPEED, 0.0, notMirrored);
+//            driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
+//            turnToHeading(TURN_SPEED, 90.0, isMirrored);
+//            driveStraight(DRIVE_SPEED, -38.0, 90.0, isMirrored);
+//
+//
+//            /*
+//
+//            aprilTag_CenterGoal = 0; // zero or how far to the left or right we want to be
+//            aprilTag_Threshold = 0.5;
+//            aprilTag_AdjustedX = 0; // this will be our adjusted value off center goal of ftcPose.X
+//            LFRBSpeed = 0;
+//            RFLBSpeed = 0;
+//            if(!parkOnly){
+//                driveStraight(DRIVE_SPEED, aprilTagDriveDistance, 0.0, notMirrored)
+//                turnToHeading(TURN_SPEED, 90.0, isMirrored)
+//                driveStraight(DRIVE_SPEED, backupToSeeAprilTag, 90.0, notMirrored}
+//                if(tag.id == aprilTagIdNumber){aprilTag_AdjustedX = tag.ftcPose.x - aprilTag_CenterGoal
+//                RFLBSpeed = strafeSpeed * (aprilTag_AdjustedX/Math.abs(aprilTag_AdjustedX))
+//                LFRBSpeed = -1 * RFLBSpeed
+//                while(Math.abs(aprilTag_AdjustedX) > aprilTag_Threshold){
+//                    leftDriveF.setpower(LFRBSpeed)
+//                    rightDriveB.setpower(LFRBSpeed)
+//                    rightDriveF.setpower(RFLBSpeed)
+//                    leftDriveB.setpower(RFLBSpeed)
+//                    if(tag.id == aprilTagIdNumber){aprilTag_AdjustedX = tag.ftcPose.x - aprilTag_CenterGoal}
+//                }
+//                leftDriveF.setpower(0)
+//                rightDriveB.setpower(0)
+//                rightDriveF.setpower(0)
+//                leftDriveB.setpower(0)
+//                driveStraight(DRIVE_SPEED, 1, 90, notMirrored)
+//                swingArm.setposition(armDelivery)
+//                set
+//                }
+//                */
+//        }
 //        if (parkOnly) { //since we're only parking, let's drive forward facing and score the yellow pixel.
 //            distance *= -1;
 //            driveStraight(DRIVE_SPEED, distance, -90.0, isMirrored);
