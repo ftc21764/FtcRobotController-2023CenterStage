@@ -156,12 +156,14 @@ public class CenterStageAutonomous extends LinearOpMode {
     int aprilTagDriveDistance = 0;
     int aprilTagIdNumber = 0;
     int aprilTagInitialDistance = 24;
-    int aprilNearDistance = 6;
-    int aprilMidDistance = 12;
-    int aprilFarDistance = 18;
-    int driveBackToSeeAprilTag = -2;
+    int aprilNearDistance = 5;
+    int aprilMidDistance = 16;
+    int aprilFarDistance = 27;
+    int driveBackToSeeAprilTag = 0;
+    double distanceToScoreFromTags = 3.0;
+    double driveDistanceToScore;
     double aprilTag_CenterGoal = 0; // zero or how far to the left or right we want to be
-    double aprilTag_Threshold = 0.5;
+    double aprilTag_Threshold = 0.25; //was 0.5
     double aprilTag_AdjustedX = 0; // this will be our adjusted value off center goal of ftcPose.X
     double LFRBSpeed = 0;
     double RFLBSpeed = 0;
@@ -674,37 +676,96 @@ public class CenterStageAutonomous extends LinearOpMode {
             driveStraight(DRIVE_SPEED, aprilTagDriveDistance, 180.0, notMirrored);
             turnToHeading(TURN_SPEED, 90.0, isMirrored);
             driveStraight(DRIVE_SPEED, driveBackToSeeAprilTag, 90.0, notMirrored);
-            if (tagProcessor.getDetections().size() > 0) {
-                AprilTagDetection tag = tagProcessor.getDetections().get(0);
-                if (tag.id == aprilTagIdNumber) {
-                    aprilTag_AdjustedX = tag.ftcPose.x - aprilTag_CenterGoal;
-                }
-                RFLBSpeed = strafeSpeed * (aprilTag_AdjustedX / Math.abs(aprilTag_AdjustedX));
-                LFRBSpeed = -1 * RFLBSpeed;
-                while (Math.abs(aprilTag_AdjustedX) > aprilTag_Threshold) {
-                    leftDriveF.setPower(LFRBSpeed);
-                    rightDriveB.setPower(LFRBSpeed);
-                    rightDriveF.setPower(RFLBSpeed);
-                    leftDriveB.setPower(RFLBSpeed);
-                    if (tagProcessor.getDetections().size() > 0) {
-                        tag = tagProcessor.getDetections().get(0);
-                        if (tag.id == aprilTagIdNumber) {aprilTag_AdjustedX = tag.ftcPose.x - aprilTag_CenterGoal;}
-                    }
-                }
-                leftDriveF.setPower(0);
-                rightDriveB.setPower(0);
-                rightDriveF.setPower(0);
-                leftDriveB.setPower(0);
-                driveStraight(DRIVE_SPEED, 1, 90, notMirrored);
-//                swingArm.setPosition(armDelivery);
-//                ElapsedTime rotationTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-//                int fullRotationTime = 1809;
-//                rotationTimer.reset();
-//                while (rotationTimer.time() < fullRotationTime) {
-//                    deliveryBoard.setServoPosition(0);
-//                }
-            }
 
+            ElapsedTime strafeCorrectionTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+            int correctionTime = 3;
+            strafeCorrectionTimer.reset();
+            AprilTagDetection tag = null;
+
+            while (opModeIsActive() && strafeCorrectionTimer.time() <= correctionTime) {
+                if (tagProcessor.getDetections().size() > 0) {
+
+                    List<AprilTagDetection> currentDetections;
+                    currentDetections = tagProcessor.getDetections();
+
+                    for (AprilTagDetection detection : currentDetections) {
+                        if (detection.id == aprilTagIdNumber) {
+                            tag = detection;
+                        }
+                    }
+                    if (tag == null) {
+                        tag = tagProcessor.getDetections().get(0);
+                    }
+
+                    telemetry.addLine("I CAN SEE! HELLO WORLD!!!");
+                    telemetry.addData("LOOKING FOR", aprilTagIdNumber);
+                    telemetry.addData("TAGS SEEN", tag.id);
+                    telemetry.addLine(String.format("XYZ %6.2f %6.2f %6.2f", tag.ftcPose.x, tag.ftcPose.y, tag.ftcPose.z));
+                    telemetry.addLine(String.format("RPY %6.2f %6.2f %6.2f", tag.ftcPose.roll, tag.ftcPose.pitch, tag.ftcPose.yaw));
+                    telemetry.addData("STRAFE TIME ELAPSED: ", strafeCorrectionTimer.time());
+                    telemetry.update();
+                    if (tag.id == aprilTagIdNumber) {
+                        aprilTag_AdjustedX = tag.ftcPose.x - aprilTag_CenterGoal;
+                    }
+                    RFLBSpeed = strafeSpeed * (aprilTag_AdjustedX / Math.abs(aprilTag_AdjustedX));
+                    LFRBSpeed = -1 * RFLBSpeed;
+                    while (Math.abs(aprilTag_AdjustedX) > aprilTag_Threshold && strafeCorrectionTimer.time() <= correctionTime) {
+                        leftDriveF.setPower(LFRBSpeed);
+                        rightDriveB.setPower(LFRBSpeed);
+                        rightDriveF.setPower(RFLBSpeed);
+                        leftDriveB.setPower(RFLBSpeed);
+                        telemetry.addLine("CORRECTING!!!");
+                        telemetry.addData("HIGHEST CONFIDENCE - TAGS SEEN", tag.id);
+                        telemetry.addLine(String.format("XYZ %6.2f %6.2f %6.2f", tag.ftcPose.x, tag.ftcPose.y, tag.ftcPose.z));
+                        telemetry.addLine(String.format("RPY %6.2f %6.2f %6.2f", tag.ftcPose.roll, tag.ftcPose.pitch, tag.ftcPose.yaw));
+                        telemetry.addData("STRAFE TIME ELAPSED: ", strafeCorrectionTimer.time());
+                        telemetry.update();
+                        if (tagProcessor.getDetections().size() > 0) {
+                            currentDetections = tagProcessor.getDetections();
+
+                            for (AprilTagDetection detection : currentDetections) {
+                                if (detection.id == aprilTagIdNumber) {
+                                    tag = detection;
+                                }
+                            }
+                            if (tag == null) {
+                                tag = tagProcessor.getDetections().get(0);
+                            }
+                            if (tag.id == aprilTagIdNumber) {
+                                aprilTag_AdjustedX = tag.ftcPose.x - aprilTag_CenterGoal;
+                            }
+                            RFLBSpeed = strafeSpeed * (aprilTag_AdjustedX / Math.abs(aprilTag_AdjustedX));
+                            LFRBSpeed = -1 * RFLBSpeed;
+                        } else {
+                            leftDriveF.setPower(0);
+                            rightDriveB.setPower(0);
+                            rightDriveF.setPower(0);
+                            leftDriveB.setPower(0);
+                            //probably want to do something else here too but this is only if you see nothing
+                        }
+                    }
+                    leftDriveF.setPower(0);
+                    rightDriveB.setPower(0);
+                    rightDriveF.setPower(0);
+                    leftDriveB.setPower(0);
+                }
+            }
+            if (tagProcessor.getDetections().size() > 0) {
+                driveDistanceToScore = -1 * (tag.ftcPose.y - distanceToScoreFromTags);
+                //driveDistanceToScore = -1 * (tag.ftcPose.z - distanceToScoreFromTags);
+            } else {
+                driveDistanceToScore = -10.0; //roughly
+            }
+            turnToHeading(TURN_SPEED, 90.0, isMirrored);
+            driveStraight(DRIVE_SPEED, driveDistanceToScore, 90.0, isMirrored);
+            swingArm.setPosition(armDelivery);
+            ElapsedTime rotationTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+            int fullRotationTime = 1809;
+            rotationTimer.reset();
+            while (rotationTimer.time() < fullRotationTime) { //360 rotation to lose the pixel
+                deliveryBoard.setServoPosition(0);
+            }
+            //DO MORE STUFF!!
         }
 
 
