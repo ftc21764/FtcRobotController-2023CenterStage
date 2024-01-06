@@ -160,7 +160,7 @@ public class CenterStageAutonomous extends LinearOpMode {
     int aprilMidDistance = 16;
     int aprilFarDistance = 27;
     int driveBackToSeeAprilTag = 0;
-    double distanceToScoreFromTags = 3.0;
+    double distanceToScoreFromTags = 0;
     double driveDistanceToScore;
     double aprilTag_CenterGoal = 0; // zero or how far to the left or right we want to be
     double aprilTag_Threshold = 0.25; //was 0.5
@@ -213,12 +213,12 @@ public class CenterStageAutonomous extends LinearOpMode {
 
     // These constants define the desired driving/control characteristics
     // They can/should be tweaked to suit the specific robot drive train.
-    static final double DRIVE_SPEED = 0.2;     // Max driving speed for better distance accuracy.
-    static final double SLOW_DRIVE_SPEED = (double)DRIVE_SPEED/2;
-    static final double FAST_DRIVE_SPEED = (double)DRIVE_SPEED*2;
-    static final double TURN_SPEED = 0.2;     // Max Turn speed to limit turn rate
-    static final double SLOW_TURN_SPEED = (double)TURN_SPEED/2;
-    static final double FAST_TURN_SPEED = (double)TURN_SPEED*2;
+    static final double DRIVE_SPEED = 0.35;     // Max driving speed for better distance accuracy.
+    static final double SLOW_DRIVE_SPEED = 0.1;
+    static final double FAST_DRIVE_SPEED = 0.5;
+    static final double TURN_SPEED = 0.35;     // Max Turn speed to limit turn rate
+    static final double SLOW_TURN_SPEED = 0.1;
+    static final double FAST_TURN_SPEED = 0.5;
     static final double HEADING_THRESHOLD = 4.0;    // How close must the heading get to the target before moving to next step.
     // Requiring more accuracy (a smaller number) will often make the turn take longer to get into the final position.
     // Define the Proportional control coefficient (or GAIN) for "heading control".
@@ -715,7 +715,7 @@ public class CenterStageAutonomous extends LinearOpMode {
                         rightDriveF.setPower(RFLBSpeed);
                         leftDriveB.setPower(RFLBSpeed);
                         telemetry.addLine("CORRECTING!!!");
-                        telemetry.addData("HIGHEST CONFIDENCE - TAGS SEEN", tag.id);
+                        telemetry.addData("TARGET TAGS SEEN", tag.id);
                         telemetry.addLine(String.format("XYZ %6.2f %6.2f %6.2f", tag.ftcPose.x, tag.ftcPose.y, tag.ftcPose.z));
                         telemetry.addLine(String.format("RPY %6.2f %6.2f %6.2f", tag.ftcPose.roll, tag.ftcPose.pitch, tag.ftcPose.yaw));
                         telemetry.addData("STRAFE TIME ELAPSED: ", strafeCorrectionTimer.time());
@@ -750,21 +750,33 @@ public class CenterStageAutonomous extends LinearOpMode {
                     leftDriveB.setPower(0);
                 }
             }
-            if (tagProcessor.getDetections().size() > 0) {
-                driveDistanceToScore = -1 * (tag.ftcPose.y - distanceToScoreFromTags);
-                //driveDistanceToScore = -1 * (tag.ftcPose.z - distanceToScoreFromTags);
-            } else {
-                driveDistanceToScore = -10.0; //roughly
-            }
+//            TROUBLESHOOT AND IMPLEMENT LATER:
+
+//            if (tagProcessor.getDetections().size() > 0) {
+//                driveDistanceToScore = (double)(Math.sqrt(Math.pow(tag.ftcPose.y, 2) - 81) - 1.5); //pythagorean theorem based off of robot height and tag y value. -1.5 inches to get to black line.
+//                driveDistanceToScore = -1 * (driveDistanceToScore - distanceToScoreFromTags);
+//                driveDistanceToScore *= (5/3);
+//                //driveDistanceToScore = -1 * (tag.ftcPose.z - distanceToScoreFromTags);
+//            } else {
+
+            driveDistanceToScore = -20.0; //roughly
+
+//            }
+            tagsVisionPortal.close();
+            leftDriveF.setPower(0);
+            rightDriveB.setPower(0);
+            rightDriveF.setPower(0);
+            leftDriveB.setPower(0);
             turnToHeading(TURN_SPEED, 90.0, isMirrored);
-            driveStraight(DRIVE_SPEED, driveDistanceToScore, 90.0, isMirrored);
             swingArm.setPosition(armDelivery);
+            driveStraight(DRIVE_SPEED, driveDistanceToScore, 90.0, isMirrored);
             ElapsedTime rotationTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-            int fullRotationTime = 1809;
+            int fullRotationTime = 1809 * 2;
             rotationTimer.reset();
-            while (rotationTimer.time() < fullRotationTime) { //360 rotation to lose the pixel
+            while (rotationTimer.time() < fullRotationTime) { //double 360 rotation to lose the pixel
                 deliveryBoard.setServoPosition(0);
             }
+            driveStraight(SLOW_DRIVE_SPEED, 2.0, 90.0, isMirrored);
             //DO MORE STUFF!!
         }
 
