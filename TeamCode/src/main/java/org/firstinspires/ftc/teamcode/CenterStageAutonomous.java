@@ -215,9 +215,10 @@ public class CenterStageAutonomous extends LinearOpMode {
     // They can/should be tweaked to suit the specific robot drive train.
     static final double DRIVE_SPEED = 0.35;     // Max driving speed for better distance accuracy.
     static final double SLOW_DRIVE_SPEED = 0.1;
-    static final double FAST_DRIVE_SPEED = 0.5;
-    static final double TURN_SPEED = 0.35;     // Max Turn speed to limit turn rate
-    static final double SLOW_TURN_SPEED = 0.1;
+    static final double FAST_DRIVE_SPEED = 0.6;
+    static final double TURN_SPEED = 0.45;     // Max Turn speed to limit turn rate
+    static final double SCORE_DRIVE_SPEED = 0.3;
+    static final double SLOW_TURN_SPEED = 0.15;
     static final double FAST_TURN_SPEED = 0.5;
     static final double HEADING_THRESHOLD = 4.0;    // How close must the heading get to the target before moving to next step.
     // Requiring more accuracy (a smaller number) will often make the turn take longer to get into the final position.
@@ -622,20 +623,10 @@ public class CenterStageAutonomous extends LinearOpMode {
             driveStraight(DRIVE_SPEED, distance, -90.0, isMirrored);
             if (stalling) {
                 if (trianglePark) {
-                    while ((double) (30 - (getRuntime() - tbegin)) > 10.0) {
-                        //runtime.reset();
-                        telemetry.addData("RUN TIME REMAINING:", (double) (30 - (getRuntime() - tbegin)));
-                        telemetry.addData("STALL TIME REMAINING:", (double) ((30 - (getRuntime() - tbegin)) - 10.0));
-                        telemetry.update();
-                    }
+                    stall(tbegin, 10); //change these numbers later
                     driveStraight(FAST_DRIVE_SPEED, 48, -90.0, isMirrored); //remaining distance to get to line
                 } else {
-                    while ((double) (30 - (getRuntime() - tbegin)) > 8.0) {
-                        //runtime.reset();
-                        telemetry.addData("RUN TIME REMAINING:", (double) (30 - (getRuntime() - tbegin)));
-                        telemetry.addData("STALL TIME REMAINING:", (double) ((30 - (getRuntime() - tbegin)) - 7.0));
-                        telemetry.update();
-                    }
+                    stall(tbegin, 8); //change these numbers later
                     driveStraight(DRIVE_SPEED, 64.0, -90.0, isMirrored); //remaining distance to park in square
                 }
             }
@@ -655,20 +646,10 @@ public class CenterStageAutonomous extends LinearOpMode {
             driveStraight(DRIVE_SPEED, distance, 90.0, isMirrored);
             if (stalling) {
                 if (trianglePark) {
-                    while ((double) (30 - (getRuntime() - tbegin)) > 10.0) {
-                        //runtime.reset();
-                        telemetry.addData("RUN TIME REMAINING:", (double) (30 - (getRuntime() - tbegin)));
-                        telemetry.addData("STALL TIME REMAINING:", (double) ((30 - (getRuntime() - tbegin)) - 10.0));
-                        telemetry.update();
-                    }
+                    stall(tbegin, 10); //change these numbers later
                     driveStraight(DRIVE_SPEED, -26, 90.0, isMirrored); //remaining distance
                 } else {
-                    while ((double) (30 - (getRuntime() - tbegin)) > 8.0) {
-                        //runtime.reset();
-                        telemetry.addData("RUN TIME REMAINING:", (double) (30 - (getRuntime() - tbegin)));
-                        telemetry.addData("STALL TIME REMAINING:", (double) ((30 - (getRuntime() - tbegin)) - 7.0));
-                        telemetry.update();
-                    }
+                    stall(tbegin, 8); //change these numbers later
                     driveStraight(DRIVE_SPEED, -64, 90.0, isMirrored); //remaining distance
                 }
             }
@@ -759,7 +740,7 @@ public class CenterStageAutonomous extends LinearOpMode {
 //                //driveDistanceToScore = -1 * (tag.ftcPose.z - distanceToScoreFromTags);
 //            } else {
 
-            driveDistanceToScore = -20.0; //roughly
+            driveDistanceToScore = -16.0; //roughly
 
 //            }
             tagsVisionPortal.close();
@@ -769,14 +750,14 @@ public class CenterStageAutonomous extends LinearOpMode {
             leftDriveB.setPower(0);
             turnToHeading(TURN_SPEED, 90.0, isMirrored);
             swingArm.setPosition(armDelivery);
-            driveStraight(DRIVE_SPEED, driveDistanceToScore, 90.0, isMirrored);
+            driveStraight(SCORE_DRIVE_SPEED, driveDistanceToScore, 90.0, isMirrored);
             ElapsedTime rotationTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
             int fullRotationTime = 1809 * 2;
             rotationTimer.reset();
             while (rotationTimer.time() < fullRotationTime) { //double 360 rotation to lose the pixel
                 deliveryBoard.setServoPosition(0);
             }
-            driveStraight(SLOW_DRIVE_SPEED, 2.0, 90.0, isMirrored);
+            driveStraight(DRIVE_SPEED, 2.0, 90.0, isMirrored);
             //DO MORE STUFF!!
         }
 
@@ -1226,6 +1207,15 @@ public class CenterStageAutonomous extends LinearOpMode {
 
         // Stop all motion;
         moveRobot(0, 0);
+    }
+
+    public void stall(double tbegin, int time) {
+        while ((double) (30 - (getRuntime() - tbegin)) > time) {
+            //runtime.reset();
+            telemetry.addData("RUN TIME REMAINING:", (double) (30 - (getRuntime() - tbegin)));
+            telemetry.addData("STALL TIME REMAINING:", (double) ((30 - (getRuntime() - tbegin)) - time));
+            telemetry.update();
+        }
     }
 
     // **********  LOW Level driving functions.  ********************
