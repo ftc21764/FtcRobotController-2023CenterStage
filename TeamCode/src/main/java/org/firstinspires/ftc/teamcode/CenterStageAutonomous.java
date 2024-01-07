@@ -161,12 +161,14 @@ public class CenterStageAutonomous extends LinearOpMode {
     int aprilFarDistance = 27;
     int driveBackToSeeAprilTag = 0;
     double distanceToScoreFromTags = 0;
-    double driveDistanceToScore;
+    double driveDistanceToScore = -16.0;
     double aprilTag_CenterGoal = 0; // zero or how far to the left or right we want to be
-    double aprilTag_Threshold = 0.25; //was 0.5
+    double aprilTag_Threshold = 0.5; //was 0.25
     double aprilTag_AdjustedX = 0; // this will be our adjusted value off center goal of ftcPose.X
     double LFRBSpeed = 0;
     double RFLBSpeed = 0;
+
+    boolean strafeCorrectionDone = false;
 
     //String allianceColor = "blue";
 
@@ -182,7 +184,7 @@ public class CenterStageAutonomous extends LinearOpMode {
 
     boolean findTag = false;
 
-    double strafeSpeed = 0.1;
+    double strafeSpeed = 0.05;
     double directionToStrafe = 0;
 
     // Calculate the COUNTS_PER_INCH for your specific drive train.
@@ -213,13 +215,13 @@ public class CenterStageAutonomous extends LinearOpMode {
 
     // These constants define the desired driving/control characteristics
     // They can/should be tweaked to suit the specific robot drive train.
-    static final double DRIVE_SPEED = 0.35;     // Max driving speed for better distance accuracy.
-    static final double SLOW_DRIVE_SPEED = 0.1;
+    static final double DRIVE_SPEED = 0.45;     // Max driving speed for better distance accuracy.
+    static final double SLOW_DRIVE_SPEED = 0.15;
     static final double FAST_DRIVE_SPEED = 0.6;
     static final double TURN_SPEED = 0.45;     // Max Turn speed to limit turn rate
-    static final double SCORE_DRIVE_SPEED = 0.3;
+    static final double SCORE_DRIVE_SPEED = 0.05;
     static final double SLOW_TURN_SPEED = 0.15;
-    static final double FAST_TURN_SPEED = 0.5;
+    static final double FAST_TURN_SPEED = 0.6;
     static final double HEADING_THRESHOLD = 4.0;    // How close must the heading get to the target before moving to next step.
     // Requiring more accuracy (a smaller number) will often make the turn take longer to get into the final position.
     // Define the Proportional control coefficient (or GAIN) for "heading control".
@@ -725,12 +727,14 @@ public class CenterStageAutonomous extends LinearOpMode {
                             //probably want to do something else here too but this is only if you see nothing
                         }
                     }
+                    strafeCorrectionDone = true;
                     leftDriveF.setPower(0);
                     rightDriveB.setPower(0);
                     rightDriveF.setPower(0);
                     leftDriveB.setPower(0);
                 }
             }
+            tagsVisionPortal.close();
 //            TROUBLESHOOT AND IMPLEMENT LATER:
 
 //            if (tagProcessor.getDetections().size() > 0) {
@@ -740,10 +744,8 @@ public class CenterStageAutonomous extends LinearOpMode {
 //                //driveDistanceToScore = -1 * (tag.ftcPose.z - distanceToScoreFromTags);
 //            } else {
 
-            driveDistanceToScore = -16.0; //roughly
-
+            //driveDistanceToScore = -16.0; //roughly
 //            }
-            tagsVisionPortal.close();
             leftDriveF.setPower(0);
             rightDriveB.setPower(0);
             rightDriveF.setPower(0);
@@ -757,6 +759,7 @@ public class CenterStageAutonomous extends LinearOpMode {
             while (rotationTimer.time() < fullRotationTime) { //double 360 rotation to lose the pixel
                 deliveryBoard.setServoPosition(0);
             }
+            deliveryBoard.setServoPosition(0.5);
             driveStraight(DRIVE_SPEED, 2.0, 90.0, isMirrored);
             //DO MORE STUFF!!
         }
