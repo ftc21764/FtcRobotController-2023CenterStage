@@ -39,7 +39,8 @@ public class SwingArm {
 //    11109
     static final int PICKUP_POINT_COUNT = 75;  // 10
     static final int CARRY_POINT_COUNT = 700;
-    static final int DELIVERY_POINT_COUNT = 1860;
+    static final int DELIVERY_POINT_COUNT = 1840;
+    static final int HIGHEST_POINT_COUNT = 1820; //1953;
 
     static final double UP_MAXIMUM_SPEED = 0.75;
     static final double DOWN_MAXIMUM_SPEED = 0.3;
@@ -99,6 +100,8 @@ public class SwingArm {
             targetPositionCount = DELIVERY_POINT_COUNT;
         } else if (position == 4) {
             targetPositionCount = DRIVE_POINT_COUNT;
+        } else if (position == 5) {
+            targetPositionCount = HIGHEST_POINT_COUNT;
         } else {
             return;
         }
@@ -143,10 +146,12 @@ public class SwingArm {
     private void readGamepad(Gamepad gamepad) {
         if (gamepad.a) {
             setPosition(1);
-        } else if (gamepad.b || gamepad.x) {
+        } else if (gamepad.b) {
             setPosition(2);
         } else if (gamepad.y) {
             setPosition(3);
+        } else if (gamepad.x) {
+            setPosition(5);
         }
 
         telemetry.addData("Gamepad right stick/left stick:", "%f %f", gamepad.right_stick_y, gamepad.left_stick_y);

@@ -144,11 +144,12 @@ public class CenterStageAutonomous extends LinearOpMode {
     boolean trianglePark = false;
     boolean stalling = false; //cap
 
-    int armHardStop = 0;
-    int armPickUp = 1;
-    int armCarry = 2;
-    int armDelivery = 3;
-    int armDrivePos = 4;
+    int armHardStopID = 0;
+    int armPickUpID = 1;
+    int armCarryID = 2;
+    int armDeliveryID = 3;
+    int armDrivePosID = 4;
+    int armHighestScoringID = 5;
     int driveStraightLoops = 0;
 
     double tbegin;
@@ -157,7 +158,7 @@ public class CenterStageAutonomous extends LinearOpMode {
     int aprilTagIdNumber = 0;
     int aprilTagInitialDistance = 24;
     int aprilNearDistance = 5;
-    int aprilMidDistance = 16;
+    int aprilMidDistance = 19;
     int aprilFarDistance = 27;
     int driveBackToSeeAprilTag = 0;
     double distanceToScoreFromTags = 0;
@@ -219,7 +220,7 @@ public class CenterStageAutonomous extends LinearOpMode {
     static final double SLOW_DRIVE_SPEED = 0.15;
     static final double FAST_DRIVE_SPEED = 0.6;
     static final double TURN_SPEED = 0.45;     // Max Turn speed to limit turn rate
-    static final double SCORE_DRIVE_SPEED = 0.05;
+    static final double SCORE_DRIVE_SPEED = 0.15;
     static final double SLOW_TURN_SPEED = 0.15;
     static final double FAST_TURN_SPEED = 0.6;
     static final double HEADING_THRESHOLD = 4.0;    // How close must the heading get to the target before moving to next step.
@@ -489,7 +490,11 @@ public class CenterStageAutonomous extends LinearOpMode {
 
     public void runAutonomousProgram(boolean isFar, boolean parkOnly, boolean trianglePark, boolean stalling) {
 
-        swingArm.setPosition(armDrivePos);
+        if (!parkOnly) {
+            swingArm.setPosition(armCarryID);
+        } else {
+            swingArm.setPosition(armDrivePosID);
+        }
         telemetry.addData( "SwingArmPosition", swingArm.armMotor.getCurrentPosition());
 
 //        while (true) {
@@ -658,7 +663,8 @@ public class CenterStageAutonomous extends LinearOpMode {
             turnToHeading(TURN_SPEED, 180.0, notMirrored);
             driveStraight(DRIVE_SPEED, aprilTagDriveDistance, 180.0, notMirrored);
             turnToHeading(TURN_SPEED, 90.0, isMirrored);
-            driveStraight(DRIVE_SPEED, driveBackToSeeAprilTag, 90.0, notMirrored);
+            holdHeading(TURN_SPEED, 90.0, 1.0, isMirrored);
+            //driveStraight(DRIVE_SPEED, driveBackToSeeAprilTag, 90.0, notMirrored);
 
             ElapsedTime strafeCorrectionTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
             int correctionTime = 3;
@@ -751,7 +757,7 @@ public class CenterStageAutonomous extends LinearOpMode {
             rightDriveF.setPower(0);
             leftDriveB.setPower(0);
             turnToHeading(TURN_SPEED, 90.0, isMirrored);
-            swingArm.setPosition(armDelivery);
+            swingArm.setPosition(armDeliveryID);
             driveStraight(SCORE_DRIVE_SPEED, driveDistanceToScore, 90.0, isMirrored);
             ElapsedTime rotationTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
             int fullRotationTime = 1809 * 2;
@@ -950,7 +956,7 @@ public class CenterStageAutonomous extends LinearOpMode {
 //            driveStraight(DRIVE_SPEED, -38.0, 90.0, isMirrored);
 //        }
 
-        swingArm.setPosition(armHardStop);
+        swingArm.setPosition(armHardStopID);
         telemetry.addData( "SwingArmPosition", swingArm.armMotor.getCurrentPosition());
     }
 
@@ -1184,7 +1190,7 @@ public class CenterStageAutonomous extends LinearOpMode {
         ElapsedTime holdTimer = new ElapsedTime();
         holdTimer.reset();
 
-        if (reverseSides) {
+        if (reverseSides && isRed) {
             heading *= -1;
         }
 
