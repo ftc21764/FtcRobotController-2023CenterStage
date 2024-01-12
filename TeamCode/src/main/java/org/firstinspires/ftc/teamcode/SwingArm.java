@@ -17,6 +17,18 @@ public class SwingArm {
     private final Gamepad gamepad;
     private final ElapsedTime runtime = new ElapsedTime();
 
+//    double realFiveToOneRatio = 5.23;
+//    double armRealGearRatio = Math.pow(realFiveToOneRatio, 3); //real 125:1
+//    int ultPlanHexEncoderTicks = 28; //ticks per motor rotation
+//    int fullRotationDegrees = 360;
+//
+//    public void angleToTicks (double targetAngle) {
+//        targetPositionCount = (int)(targetAngle / (fullRotationDegrees / (ultPlanHexEncoderTicks * armRealGearRatio)));
+//    }
+
+
+
+
     // low= the position that the linear slide goes to to pick up cones and/or deposit on ground junctions.
     // this should be at a height where the empty intake can comfortably fit over a stack of five cones.
 
@@ -37,10 +49,10 @@ public class SwingArm {
     //static final int TIMEOUT_SECONDS = 10;
 
 //    11109
-    static final int PICKUP_POINT_COUNT = 75;  // 10
+    static final int PICKUP_POINT_COUNT = 50;  // 75
     static final int CARRY_POINT_COUNT = 700;
     static final int DELIVERY_POINT_COUNT = 1840;
-    static final int HIGHEST_POINT_COUNT = 1820; //1953;
+    static final int HIGHEST_POINT_COUNT = 1770; //1953;
 
     static final double UP_MAXIMUM_SPEED = 0.75;
     static final double DOWN_MAXIMUM_SPEED = 0.3;
@@ -50,7 +62,7 @@ public class SwingArm {
     boolean isAutonomous;
 
     static final int HIGH_HARDSTOP = DELIVERY_POINT_COUNT + 200;
-    static final int LOW_HARDSTOP = 0;
+    static final int LOW_HARDSTOP = -5;
     static final int DRIVE_POINT_COUNT = 100;
 
     public SwingArm(HardwareMap hardwareMap, Telemetry telemetry, Gamepad gamepad, boolean isAutonomous) {

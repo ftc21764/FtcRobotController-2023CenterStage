@@ -147,7 +147,7 @@ public class CenterStageTeleOp extends LinearOpMode {
 //        deliveryServo.init();
 //        deliveryServo.deliveryServo.resetDeviceConfigurationForOpMode();
         deliveryBoard.init(hardwareMap);
-        launcherBoard.init(hardwareMap, "launcherServo");
+        launcherBoard.init(hardwareMap);
         telemetry.update();
 
         waitForStart();

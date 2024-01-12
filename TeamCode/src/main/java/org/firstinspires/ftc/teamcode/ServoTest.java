@@ -2,36 +2,47 @@ package org.firstinspires.ftc.teamcode;
 
 import static java.lang.Thread.sleep;
 
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name="ServoTest", group="Robot")
-public class ServoTest extends OpMode {
-    DroneLauncherServoController board = new DroneLauncherServoController();
-    ElapsedTime rotationTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-    int rotationTime = 100;
-    boolean launched = false;
+public class ServoTest extends LinearOpMode{
 
+    public void runOpMode () {
 
+        DroneLauncherServo droneLauncherServo = new DroneLauncherServo(hardwareMap, gamepad2);
 
-    @Override
-    public void init() {
-        board.init(hardwareMap, "launcherServo");
+        waitForStart();
+
+        while (opModeIsActive()) {
+
+            droneLauncherServo.loop();
+        }
     }
 
-    @Override
-    public void loop() {
-//        DRONE LAUNCHER SERVO
-        if (gamepad2.dpad_up) {
-            if (!launched) {
-                telemetry.addData("INPUTTED:", gamepad2.dpad_up);
-                while (rotationTimer.time() < rotationTime)
-                    board.setServoPosition(0.55);
-                launched = true;
-            }
-            //telemetry.addData("SERVO POS", board.servo.getPosition());
-        }
+//
+//    @Override
+//    public void init() {
+//        board.init(hardwareMap);
+//    }
+//
+//    @Override
+//    public void loop() {
+////        DRONE LAUNCHER SERVO
+//        if (gamepad2.dpad_up) {
+//            if (!launched) {
+//                telemetry.addData("INPUTTED", gamepad2.dpad_up);
+//                telemetry.update();
+//                rotationTimer.reset();
+//                board.setServoPosition(0.50);
+//                launched = true;
+//                telemetry.addData("Launched?", launched);
+//                telemetry.update();
+//            }
+//            //telemetry.addData("SERVO POS", board.servo.getPosition());
+//        }
 
 
 //        DELIVERY SERVO
@@ -85,4 +96,3 @@ public class ServoTest extends OpMode {
 //            board.setServoPosition(0.5);
 //        }
 //    }
-}
