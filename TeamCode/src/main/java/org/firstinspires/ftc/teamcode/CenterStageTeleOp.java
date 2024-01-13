@@ -92,13 +92,14 @@ public class CenterStageTeleOp extends LinearOpMode {
 
         SwingArm swingArm = new SwingArm(hardwareMap, telemetry, gamepad2, false);
         DeliveryServoController deliveryBoard = new DeliveryServoController();
-        DroneLauncherServoController launcherBoard = new DroneLauncherServoController();
+        DroneLauncherServo droneLauncherServo = new DroneLauncherServo(hardwareMap, gamepad2);
+        //DroneLauncherServoController launcherBoard = new DroneLauncherServoController();
         ElapsedTime rotationTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         int rotationTime = 603;
         int deliveryTurnCounts = 0;
         //ContinousServo deliveryServo = new ContinousServo(hardwareMap, telemetry);
         //boolean slowMode = false;
-        double speedMultiplier = 0.75;
+        double speedMultiplier = 0.65;
 
         //double deliverySpeed = 0;
 
@@ -147,7 +148,7 @@ public class CenterStageTeleOp extends LinearOpMode {
 //        deliveryServo.init();
 //        deliveryServo.deliveryServo.resetDeviceConfigurationForOpMode();
         deliveryBoard.init(hardwareMap);
-        launcherBoard.init(hardwareMap);
+//        launcherBoard.init(hardwareMap);
         telemetry.update();
 
         waitForStart();
@@ -158,6 +159,7 @@ public class CenterStageTeleOp extends LinearOpMode {
             double max;
             intake.loop();
             swingArm.loop();
+            droneLauncherServo.loop();
             rotationTimer.reset();
 
             //servo stuff - always zero-ed angular servo that acts as continuous for delivery. there's a limit on how many slots in each direction you can turn.
@@ -175,6 +177,10 @@ public class CenterStageTeleOp extends LinearOpMode {
                     }
                 deliveryTurnCounts -= 1;
                 }
+            } else if (gamepad2.left_bumper) {
+                deliveryBoard.setServoPosition(0);
+            } else if (gamepad2.right_bumper) {
+                deliveryBoard.setServoPosition(1);
             } else {
                 deliveryBoard.setServoPosition(0.5); //at a stop
             }

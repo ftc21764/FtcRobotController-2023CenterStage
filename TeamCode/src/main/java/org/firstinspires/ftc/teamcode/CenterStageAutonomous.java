@@ -169,6 +169,9 @@ public class CenterStageAutonomous extends LinearOpMode {
     double LFRBSpeed = 0;
     double RFLBSpeed = 0;
 
+    double wallToTriangleDriveDistance = 80;
+    double scoringDistanceToTrianglePark;
+
     boolean strafeCorrectionDone = false;
 
     //String allianceColor = "blue";
@@ -312,7 +315,6 @@ public class CenterStageAutonomous extends LinearOpMode {
 
 
     protected void mechanismLoop() {
-        //linearSlide.loop();
         intake.loop();
         swingArm.loop();
     }
@@ -453,7 +455,11 @@ public class CenterStageAutonomous extends LinearOpMode {
         if (trianglePark) {
             parkingPos = "TRIANGLE";
         } else {
-            parkingPos = "IN THE SQUARE HOLE";
+            if (parkOnly) {
+                parkingPos = "IN THE SQUARE HOLE";
+            } else {
+                parkingPos = "STAY AT BACKDROP";
+            }
         }
 
         if (stalling) {
@@ -490,11 +496,8 @@ public class CenterStageAutonomous extends LinearOpMode {
 
     public void runAutonomousProgram(boolean isFar, boolean parkOnly, boolean trianglePark, boolean stalling) {
 
-        if (!parkOnly) {
-            swingArm.setPosition(armCarryID);
-        } else {
-            swingArm.setPosition(armDrivePosID);
-        }
+        swingArm.setPosition(armDrivePosID);
+
         telemetry.addData( "SwingArmPosition", swingArm.armMotor.getCurrentPosition());
 
 //        while (true) {
@@ -607,7 +610,14 @@ public class CenterStageAutonomous extends LinearOpMode {
                 driveStraight(DRIVE_SPEED, distance, 0.0, notMirrored);
                 break;
         }
+        /*
+        if(trianglePark && !parkOnly){
+        remainingDistanceToTriangePark = distanceToDriveToTrianglePark - AprilTagDriveDistance
+            if(weScoredYellow){
+            driveStraight(remainingDistanceToTriangePark}
+            }
 
+        */
         distance = -50;
 
         if (isFar) {
@@ -661,6 +671,7 @@ public class CenterStageAutonomous extends LinearOpMode {
                 }
             }
             turnToHeading(TURN_SPEED, 180.0, notMirrored);
+            swingArm.setPosition(armCarryID);
             driveStraight(DRIVE_SPEED, aprilTagDriveDistance, 180.0, notMirrored);
             turnToHeading(TURN_SPEED, 90.0, isMirrored);
             holdHeading(TURN_SPEED, 90.0, 1.0, isMirrored);
@@ -698,7 +709,7 @@ public class CenterStageAutonomous extends LinearOpMode {
                     }
                     RFLBSpeed = strafeSpeed * (aprilTag_AdjustedX / Math.abs(aprilTag_AdjustedX));
                     LFRBSpeed = -1 * RFLBSpeed;
-                    while (Math.abs(aprilTag_AdjustedX) > aprilTag_Threshold && strafeCorrectionTimer.time() <= correctionTime) {
+                    while (Math.abs(aprilTag_AdjustedX) > aprilTag_Threshold && strafeCorrectionTimer.time() <= correctionTime && !strafeCorrectionDone) {
                         leftDriveF.setPower(LFRBSpeed);
                         rightDriveB.setPower(LFRBSpeed);
                         rightDriveF.setPower(RFLBSpeed);
@@ -767,6 +778,14 @@ public class CenterStageAutonomous extends LinearOpMode {
             }
             deliveryBoard.setServoPosition(0.5);
             driveStraight(DRIVE_SPEED, 2.0, 90.0, isMirrored);
+            swingArm.setPosition(armCarryID);
+            if (trianglePark) {
+                scoringDistanceToTrianglePark = wallToTriangleDriveDistance - aprilTagDriveDistance;
+                turnToHeading(TURN_SPEED, 180, notMirrored);
+                driveStraight(DRIVE_SPEED, scoringDistanceToTrianglePark, 180, notMirrored);
+                turnToHeading(TURN_SPEED, 90, isMirrored);
+                driveStraight(DRIVE_SPEED, -12, 180, notMirrored);
+            }
             //DO MORE STUFF!!
         }
 
@@ -958,6 +977,12 @@ public class CenterStageAutonomous extends LinearOpMode {
 
         swingArm.setPosition(armHardStopID);
         telemetry.addData( "SwingArmPosition", swingArm.armMotor.getCurrentPosition());
+
+        if (parkOnly) {
+            holdHeading(TURN_SPEED, -90, 1.5, isMirrored);
+        } else {
+            holdHeading(TURN_SPEED, 90, 1.5, isMirrored);
+        }
     }
 
     /*

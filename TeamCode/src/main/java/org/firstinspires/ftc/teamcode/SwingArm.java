@@ -63,6 +63,7 @@ public class SwingArm {
 
     static final int HIGH_HARDSTOP = DELIVERY_POINT_COUNT + 200;
     static final int LOW_HARDSTOP = -5;
+    static final int LOWEST_HARDWARE_STOP = -25;
     static final int DRIVE_POINT_COUNT = 100;
 
     public SwingArm(HardwareMap hardwareMap, Telemetry telemetry, Gamepad gamepad, boolean isAutonomous) {
@@ -168,7 +169,7 @@ public class SwingArm {
 
         telemetry.addData("Gamepad right stick/left stick:", "%f %f", gamepad.right_stick_y, gamepad.left_stick_y);
         if (gamepad.right_stick_y > 0.1 || gamepad.right_stick_y < -0.1 ) {
-            targetPositionCount = Range.clip((int)(targetPositionCount + ADJUSTMENT_COUNT*-gamepad.right_stick_y), LOW_HARDSTOP, HIGH_HARDSTOP);
+            targetPositionCount = Range.clip((int)(targetPositionCount + ADJUSTMENT_COUNT*-gamepad.right_stick_y), LOWEST_HARDWARE_STOP, HIGH_HARDSTOP);
             //swingArmMotor.setTargetPosition(targetPositionCount);
             armMotor.setTargetPosition((int)targetPositionCount);
             telemetry.addData("Manual Branch", "Adjustment made");
